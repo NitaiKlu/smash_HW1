@@ -2,12 +2,16 @@
 #define SMASH_COMMAND_H_
 
 #include <vector>
+using std::vector;
+#include <string>
+using std::string;
 
 #define COMMAND_ARGS_MAX_LENGTH (200)
 #define COMMAND_MAX_ARGS (20)
 
 class Command {
 // TODO: Add your data members
+  vector<string> args;
  public:
   Command(const char* cmd_line);
   virtual ~Command();
@@ -49,9 +53,12 @@ class RedirectionCommand : public Command {
 };
 
 class ChangeDirCommand : public BuiltInCommand {
-// TODO: Add your data members public:
-  ChangeDirCommand(const char* cmd_line, char** plastPwd);
-  virtual ~ChangeDirCommand() {}
+// TODO: Add your data members 
+private:
+  string def = "smash";
+public:
+  ChangeDirCommand(const char* cmd_line, string* plastPwd);
+  virtual ~ChangeDirCommand() = default;
   void execute() override;
 };
 
@@ -71,7 +78,8 @@ class ShowPidCommand : public BuiltInCommand {
 
 class JobsList;
 class QuitCommand : public BuiltInCommand {
-// TODO: Add your data members public:
+// TODO: Add your data members 
+public:
   QuitCommand(const char* cmd_line, JobsList* jobs);
   virtual ~QuitCommand() {}
   void execute() override;
@@ -150,6 +158,7 @@ class TouchCommand : public BuiltInCommand {
 class SmallShell {
  private:
   // TODO: Add your data members
+  string dir;
   SmallShell();
  public:
   Command *CreateCommand(const char* cmd_line);
@@ -164,6 +173,7 @@ class SmallShell {
   ~SmallShell();
   void executeCommand(const char* cmd_line);
   // TODO: add extra methods as needed
+  void printDir();
 };
 
 #endif //SMASH_COMMAND_H_
