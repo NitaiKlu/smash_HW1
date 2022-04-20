@@ -75,7 +75,6 @@ void _removeBackgroundSign(char *cmd_line)
   // truncate the command line string up to the last non-space character
   cmd_line[str.find_last_not_of(WHITESPACE, idx) + 1] = 0;
 }
-
 //**************classes implementation**********************
 
 //**************Command**********************
@@ -87,6 +86,20 @@ Command::Command(const char *cmd_line)
 string Command::getCmdName()
 {
   return args[0];
+}
+
+char **Command::getArgsArr()
+{
+  int len = args.size();
+  char **argsArr = new char *[len + 3];
+  argsArr[0] = (char *)("/bin/bash");
+  argsArr[1] = (char *)("-c");
+  for (int i = 2; i < len + 2; i++)
+  {
+    argsArr[i] = const_cast<char *>(args[i - 2].c_str());
+  }
+  argsArr[len + 2] = NULL;
+  return argsArr;
 }
 
 //**************BuiltInCommand**********************
@@ -227,6 +240,16 @@ void JobsCommand::execute()
   job_ptr->printJobsList();
 }
 
+//**************ExternalCommand**********************
+ExternalCommand::ExternalCommand(const char *cmd_line)
+    : Command(cmd_line)
+{
+}
+
+void ExternalCommand::execute()
+{
+}
+
 //**************SmallShell**********************
 SmallShell::SmallShell() : prompt("smash")
 {
@@ -267,24 +290,39 @@ Command *SmallShell::CreateCommand(const char *cmd_line)
     return new JobsCommand(cmd_line, &jobs);
   }
   else
-    return nullptr;
-  /*
-  else {
+  {
     return new ExternalCommand(cmd_line);
   }
-  return nullptr;
-  */
 }
 
 void SmallShell::executeCommand(const char *cmd_line)
 {
-  // TODO: Add your implementation here
-  // for example:
   Command *cmd = CreateCommand(cmd_line);
-  if (cmd == nullptr)
-    std::cout << "No Cmd" << std::endl;
-  else
+  if (dynamic_cast<ExternalCommand *>(cmd) == nullptr) // Built-in Command
+  {
     cmd->execute();
+  }
+  else // External Command
+  {
+    char **argsArr = cmd->getArgsArr();
+    pid_t pid = fork();
+    if (pid == 0) // child
+    {
+      execv(argsArr[0], argsArr);
+    }
+    else // parent
+    {
+      wait(NULL);
+      /*
+      if (_isBackgroundComamnd(cmd_line))
+      {
+      }
+      else
+      {
+      }
+      */
+    }
+  }
   // Please note that you must fork smash process for some commands (e.g., external commands....)
 }
 

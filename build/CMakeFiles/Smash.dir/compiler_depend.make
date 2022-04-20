@@ -3,6 +3,7 @@
 
 CMakeFiles/Smash.dir/Commands.cpp.o: ../Commands.cpp \
   /usr/include/stdc-predef.h \
+  ../Commands.h \
   /usr/include/unistd.h \
   /usr/include/features.h \
   /usr/include/x86_64-linux-gnu/sys/cdefs.h \
@@ -224,7 +225,7 @@ CMakeFiles/Smash.dir/Commands.cpp.o: ../Commands.cpp \
   /usr/include/c++/7/bits/uses_allocator.h \
   /usr/include/c++/7/bits/invoke.h \
   /usr/include/c++/7/bits/quoted_string.h \
-  ../Commands.h \
+  /usr/include/utime.h \
   /usr/include/c++/7/stack \
   /usr/include/c++/7/deque \
   /usr/include/c++/7/bits/stl_deque.h \
@@ -234,11 +235,11 @@ CMakeFiles/Smash.dir/Commands.cpp.o: ../Commands.cpp \
   /usr/include/c++/7/bits/stl_tree.h \
   /usr/include/c++/7/ext/aligned_buffer.h \
   /usr/include/c++/7/bits/stl_map.h \
-  /usr/include/c++/7/bits/stl_multimap.h \
-  /usr/include/utime.h
+  /usr/include/c++/7/bits/stl_multimap.h
 
 CMakeFiles/Smash.dir/signals.cpp.o: ../signals.cpp \
   /usr/include/stdc-predef.h \
+  ../signals.h \
   /usr/include/c++/7/iostream \
   /usr/include/x86_64-linux-gnu/c++/7/bits/c++config.h \
   /usr/include/x86_64-linux-gnu/c++/7/bits/os_defines.h \
@@ -422,29 +423,55 @@ CMakeFiles/Smash.dir/signals.cpp.o: ../signals.cpp \
   /usr/include/x86_64-linux-gnu/bits/ss_flags.h \
   /usr/include/x86_64-linux-gnu/bits/types/struct_sigstack.h \
   /usr/include/x86_64-linux-gnu/bits/sigthread.h \
-  ../signals.h \
   ../Commands.h \
-  /usr/include/c++/7/stack \
-  /usr/include/c++/7/deque \
+  /usr/include/unistd.h \
+  /usr/include/x86_64-linux-gnu/bits/posix_opt.h \
+  /usr/include/x86_64-linux-gnu/bits/environments.h \
+  /usr/include/x86_64-linux-gnu/bits/confname.h \
+  /usr/include/x86_64-linux-gnu/bits/getopt_posix.h \
+  /usr/include/x86_64-linux-gnu/bits/getopt_core.h \
+  /usr/include/string.h \
+  /usr/include/strings.h \
+  /usr/include/c++/7/vector \
   /usr/include/c++/7/bits/stl_construct.h \
   /usr/include/c++/7/bits/stl_uninitialized.h \
-  /usr/include/c++/7/bits/stl_deque.h \
-  /usr/include/c++/7/bits/deque.tcc \
-  /usr/include/c++/7/bits/stl_stack.h \
-  /usr/include/c++/7/bits/uses_allocator.h \
-  /usr/include/c++/7/vector \
   /usr/include/c++/7/bits/stl_vector.h \
   /usr/include/c++/7/bits/stl_bvector.h \
   /usr/include/c++/7/bits/vector.tcc \
+  /usr/include/c++/7/sstream \
+  /usr/include/c++/7/bits/sstream.tcc \
+  /usr/include/x86_64-linux-gnu/sys/wait.h \
+  /usr/include/c++/7/iomanip \
+  /usr/include/c++/7/locale \
+  /usr/include/c++/7/bits/locale_facets_nonio.h \
+  /usr/include/c++/7/ctime \
+  /usr/include/x86_64-linux-gnu/c++/7/bits/time_members.h \
+  /usr/include/x86_64-linux-gnu/c++/7/bits/messages_members.h \
+  /usr/include/libintl.h \
+  /usr/include/c++/7/bits/codecvt.h \
+  /usr/include/c++/7/bits/locale_facets_nonio.tcc \
+  /usr/include/c++/7/bits/locale_conv.h \
+  /usr/include/c++/7/bits/stringfwd.h \
+  /usr/include/c++/7/bits/allocator.h \
+  /usr/include/c++/7/bits/codecvt.h \
+  /usr/include/c++/7/bits/unique_ptr.h \
+  /usr/include/c++/7/utility \
+  /usr/include/c++/7/bits/stl_relops.h \
+  /usr/include/c++/7/tuple \
+  /usr/include/c++/7/array \
+  /usr/include/c++/7/bits/uses_allocator.h \
+  /usr/include/c++/7/bits/invoke.h \
+  /usr/include/c++/7/bits/quoted_string.h \
+  /usr/include/utime.h \
+  /usr/include/c++/7/stack \
+  /usr/include/c++/7/deque \
+  /usr/include/c++/7/bits/stl_deque.h \
+  /usr/include/c++/7/bits/deque.tcc \
+  /usr/include/c++/7/bits/stl_stack.h \
   /usr/include/c++/7/map \
   /usr/include/c++/7/bits/stl_tree.h \
   /usr/include/c++/7/ext/aligned_buffer.h \
   /usr/include/c++/7/bits/stl_map.h \
-  /usr/include/c++/7/tuple \
-  /usr/include/c++/7/utility \
-  /usr/include/c++/7/bits/stl_relops.h \
-  /usr/include/c++/7/array \
-  /usr/include/c++/7/bits/invoke.h \
   /usr/include/c++/7/bits/stl_multimap.h
 
 CMakeFiles/Smash.dir/smash.cpp.o: ../smash.cpp \
@@ -640,27 +667,47 @@ CMakeFiles/Smash.dir/smash.cpp.o: ../smash.cpp \
   /usr/include/x86_64-linux-gnu/bits/types/struct_sigstack.h \
   /usr/include/x86_64-linux-gnu/bits/sigthread.h \
   ../Commands.h \
-  /usr/include/c++/7/stack \
-  /usr/include/c++/7/deque \
+  /usr/include/string.h \
+  /usr/include/strings.h \
+  /usr/include/c++/7/vector \
   /usr/include/c++/7/bits/stl_construct.h \
   /usr/include/c++/7/bits/stl_uninitialized.h \
-  /usr/include/c++/7/bits/stl_deque.h \
-  /usr/include/c++/7/bits/deque.tcc \
-  /usr/include/c++/7/bits/stl_stack.h \
-  /usr/include/c++/7/bits/uses_allocator.h \
-  /usr/include/c++/7/vector \
   /usr/include/c++/7/bits/stl_vector.h \
   /usr/include/c++/7/bits/stl_bvector.h \
   /usr/include/c++/7/bits/vector.tcc \
+  /usr/include/c++/7/sstream \
+  /usr/include/c++/7/bits/sstream.tcc \
+  /usr/include/c++/7/iomanip \
+  /usr/include/c++/7/locale \
+  /usr/include/c++/7/bits/locale_facets_nonio.h \
+  /usr/include/c++/7/ctime \
+  /usr/include/x86_64-linux-gnu/c++/7/bits/time_members.h \
+  /usr/include/x86_64-linux-gnu/c++/7/bits/messages_members.h \
+  /usr/include/libintl.h \
+  /usr/include/c++/7/bits/codecvt.h \
+  /usr/include/c++/7/bits/locale_facets_nonio.tcc \
+  /usr/include/c++/7/bits/locale_conv.h \
+  /usr/include/c++/7/bits/stringfwd.h \
+  /usr/include/c++/7/bits/allocator.h \
+  /usr/include/c++/7/bits/codecvt.h \
+  /usr/include/c++/7/bits/unique_ptr.h \
+  /usr/include/c++/7/utility \
+  /usr/include/c++/7/bits/stl_relops.h \
+  /usr/include/c++/7/tuple \
+  /usr/include/c++/7/array \
+  /usr/include/c++/7/bits/uses_allocator.h \
+  /usr/include/c++/7/bits/invoke.h \
+  /usr/include/c++/7/bits/quoted_string.h \
+  /usr/include/utime.h \
+  /usr/include/c++/7/stack \
+  /usr/include/c++/7/deque \
+  /usr/include/c++/7/bits/stl_deque.h \
+  /usr/include/c++/7/bits/deque.tcc \
+  /usr/include/c++/7/bits/stl_stack.h \
   /usr/include/c++/7/map \
   /usr/include/c++/7/bits/stl_tree.h \
   /usr/include/c++/7/ext/aligned_buffer.h \
   /usr/include/c++/7/bits/stl_map.h \
-  /usr/include/c++/7/tuple \
-  /usr/include/c++/7/utility \
-  /usr/include/c++/7/bits/stl_relops.h \
-  /usr/include/c++/7/array \
-  /usr/include/c++/7/bits/invoke.h \
   /usr/include/c++/7/bits/stl_multimap.h \
   ../signals.h
 
@@ -682,8 +729,6 @@ CMakeFiles/Smash.dir/smash.cpp.o: ../smash.cpp \
 /usr/include/c++/7/deque:
 
 /usr/include/c++/7/stack:
-
-../Commands.h:
 
 /usr/include/c++/7/bits/quoted_string.h:
 
@@ -755,6 +800,8 @@ CMakeFiles/Smash.dir/smash.cpp.o: ../smash.cpp \
 
 /usr/include/x86_64-linux-gnu/c++/7/bits/ctype_inline.h:
 
+/usr/include/x86_64-linux-gnu/c++/7/bits/ctype_base.h:
+
 /usr/include/c++/7/bits/predefined_ops.h:
 
 /usr/include/c++/7/bits/stl_iterator_base_types.h:
@@ -768,8 +815,6 @@ CMakeFiles/Smash.dir/smash.cpp.o: ../smash.cpp \
 /usr/include/c++/7/type_traits:
 
 /usr/include/c++/7/bits/functexcept.h:
-
-/usr/include/x86_64-linux-gnu/c++/7/bits/ctype_base.h:
 
 /usr/include/c++/7/bits/stl_algobase.h:
 
@@ -788,20 +833,6 @@ CMakeFiles/Smash.dir/smash.cpp.o: ../smash.cpp \
 /usr/include/c++/7/new:
 
 /usr/include/c++/7/bits/hash_bytes.h:
-
-/usr/include/x86_64-linux-gnu/bits/stdint-intn.h:
-
-/usr/include/c++/7/bits/char_traits.h:
-
-/usr/include/x86_64-linux-gnu/bits/sigaction.h:
-
-/usr/include/time.h:
-
-/usr/include/c++/7/bits/stl_construct.h:
-
-/usr/include/c++/7/cstdint:
-
-/usr/include/x86_64-linux-gnu/bits/thread-shared-types.h:
 
 /usr/include/x86_64-linux-gnu/c++/7/bits/time_members.h:
 
@@ -845,15 +876,15 @@ CMakeFiles/Smash.dir/smash.cpp.o: ../smash.cpp \
 
 /usr/include/x86_64-linux-gnu/bits/confname.h:
 
+/usr/include/c++/7/bits/localefwd.h:
+
+/usr/include/c++/7/string:
+
 /usr/include/x86_64-linux-gnu/bits/sigcontext.h:
 
 /usr/include/c++/7/istream:
 
 /usr/include/x86_64-linux-gnu/c++/7/bits/error_constants.h:
-
-/usr/include/c++/7/string:
-
-/usr/include/c++/7/bits/localefwd.h:
 
 /usr/include/x86_64-linux-gnu/bits/types/struct_timeval.h:
 
@@ -873,6 +904,12 @@ CMakeFiles/Smash.dir/smash.cpp.o: ../smash.cpp \
 
 /usr/include/c++/7/bits/locale_facets.h:
 
+/usr/include/x86_64-linux-gnu/bits/stdio_lim.h:
+
+/usr/include/x86_64-linux-gnu/bits/long-double.h:
+
+/usr/include/x86_64-linux-gnu/sys/cdefs.h:
+
 /usr/include/x86_64-linux-gnu/gnu/stubs.h:
 
 /usr/include/c++/7/sstream:
@@ -882,6 +919,42 @@ CMakeFiles/Smash.dir/smash.cpp.o: ../smash.cpp \
 /usr/include/stdc-predef.h:
 
 /usr/include/c++/7/cwchar:
+
+/usr/include/x86_64-linux-gnu/bits/types.h:
+
+/usr/include/x86_64-linux-gnu/gnu/stubs-64.h:
+
+/usr/include/x86_64-linux-gnu/bits/environments.h:
+
+/usr/include/x86_64-linux-gnu/bits/stdint-intn.h:
+
+/usr/include/c++/7/bits/char_traits.h:
+
+/usr/include/x86_64-linux-gnu/bits/sigaction.h:
+
+/usr/include/time.h:
+
+/usr/include/c++/7/bits/stl_construct.h:
+
+/usr/include/c++/7/cstdint:
+
+/usr/include/x86_64-linux-gnu/bits/thread-shared-types.h:
+
+../Commands.h:
+
+/usr/include/x86_64-linux-gnu/bits/siginfo-consts-arch.h:
+
+/usr/include/c++/7/bits/ptr_traits.h:
+
+/usr/include/x86_64-linux-gnu/bits/wordsize.h:
+
+/usr/include/string.h:
+
+/usr/include/x86_64-linux-gnu/bits/signum.h:
+
+/usr/include/c++/7/bits/cxxabi_init_exception.h:
+
+/usr/include/x86_64-linux-gnu/bits/types/struct_timespec.h:
 
 /usr/include/x86_64-linux-gnu/bits/wctype-wchar.h:
 
@@ -905,24 +978,6 @@ CMakeFiles/Smash.dir/smash.cpp.o: ../smash.cpp \
 
 /usr/include/x86_64-linux-gnu/bits/getopt_core.h:
 
-/usr/include/x86_64-linux-gnu/bits/environments.h:
-
-/usr/include/x86_64-linux-gnu/bits/types.h:
-
-/usr/include/x86_64-linux-gnu/gnu/stubs-64.h:
-
-/usr/include/x86_64-linux-gnu/sys/cdefs.h:
-
-/usr/include/x86_64-linux-gnu/bits/wordsize.h:
-
-/usr/include/string.h:
-
-/usr/include/x86_64-linux-gnu/bits/signum.h:
-
-/usr/include/c++/7/bits/cxxabi_init_exception.h:
-
-/usr/include/x86_64-linux-gnu/bits/types/struct_timespec.h:
-
 /usr/include/c++/7/bits/exception_ptr.h:
 
 /usr/include/x86_64-linux-gnu/bits/libc-header-start.h:
@@ -939,10 +994,6 @@ CMakeFiles/Smash.dir/smash.cpp.o: ../smash.cpp \
 
 /usr/include/x86_64-linux-gnu/bits/types/mbstate_t.h:
 
-/usr/include/x86_64-linux-gnu/bits/stdio_lim.h:
-
-/usr/include/x86_64-linux-gnu/bits/long-double.h:
-
 /usr/include/c++/7/ostream:
 
 /usr/include/c++/7/initializer_list:
@@ -956,10 +1007,6 @@ CMakeFiles/Smash.dir/smash.cpp.o: ../smash.cpp \
 /usr/include/x86_64-linux-gnu/bits/types/__mbstate_t.h:
 
 ../Commands.cpp:
-
-/usr/include/x86_64-linux-gnu/bits/siginfo-consts-arch.h:
-
-/usr/include/c++/7/bits/ptr_traits.h:
 
 /usr/include/c++/7/bits/cpp_type_traits.h:
 

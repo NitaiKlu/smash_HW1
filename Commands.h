@@ -38,8 +38,7 @@ using std::map;
 #define COMMAND_ARGS_MAX_LENGTH (200)
 #define COMMAND_MAX_ARGS (20)
 
-const std::string WHITESPACE = " \n\r\t\f\v";
-
+const string WHITESPACE = " \n\r\t\f\v";
 
 class Command {
 // TODO: Add your data members
@@ -53,6 +52,7 @@ protected:
   //virtual void cleanup();
   // TODO: Add your extra methods if needed
   string getCmdName();
+  char ** getArgsArr();
 };
 
 class BuiltInCommand : public Command {
@@ -64,7 +64,7 @@ class BuiltInCommand : public Command {
 class ExternalCommand : public Command {
  public:
   ExternalCommand(const char* cmd_line);
-  virtual ~ExternalCommand() {}
+  virtual ~ExternalCommand() = default;
   void execute() override;
 };
 
