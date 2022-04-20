@@ -5,6 +5,8 @@
 using std::vector;
 #include <string>
 using std::string;
+#include <map>
+using std::map;
 
 #define COMMAND_ARGS_MAX_LENGTH (200)
 #define COMMAND_MAX_ARGS (20)
@@ -25,7 +27,7 @@ protected:
 class BuiltInCommand : public Command {
  public:
   BuiltInCommand(const char* cmd_line);
-  virtual ~BuiltInCommand() {}
+  virtual ~BuiltInCommand() = default;
 };
 
 class ExternalCommand : public Command {
@@ -53,11 +55,11 @@ class RedirectionCommand : public Command {
   //void cleanup() override;
 };
 
-class ChangeDirCommand : public BuiltInCommand {
+class ChangePromptCommand : public BuiltInCommand {
 // TODO: Add your data members 
 public:
-  ChangeDirCommand(const char* cmd_line);
-  virtual ~ChangeDirCommand() = default;
+  ChangePromptCommand(const char* cmd_line);
+  virtual ~ChangePromptCommand() = default;
   void execute() override;
 };
 
@@ -75,6 +77,14 @@ class ShowPidCommand : public BuiltInCommand {
   void execute() override;
 };
 
+class ChangeDirCommand : public BuiltInCommand {
+// TODO: Add your data members 
+public:
+  ChangeDirCommand(const char* cmd_line);
+  virtual ~ChangeDirCommand();
+  void execute() override;
+};
+
 class JobsList;
 class QuitCommand : public BuiltInCommand {
 // TODO: Add your data members 
@@ -88,11 +98,21 @@ public:
 
 
 class JobsList {
- public:
+ private:
   class JobEntry {
    // TODO: Add your data members
+   private:
+    string cmd;
+    int process_id;
+    int create_time;
+    bool isStopped;
+  public:
+  JobEntry(string cmd, int process_id, int create_time, bool isStopped);
+  ~JobEntry() = default;
   };
  // TODO: Add your data members
+    int max_id;
+    map<int, JobEntry> jobs;
  public:
   JobsList();
   ~JobsList();
@@ -158,7 +178,7 @@ class SmallShell {
  private:
  
   // TODO: Add your data members
-  string dir;
+  string prompt;
   SmallShell();
  public:
   Command *CreateCommand(const char* cmd_line);
@@ -173,8 +193,8 @@ class SmallShell {
   ~SmallShell();
   void executeCommand(const char* cmd_line);
   // TODO: add extra methods as needed
-  void printDir();
-  void changeDir(string new_dir);
+  void printPtompt();
+  void changePrompt(string new_prompt);
 };
 
 #endif //SMASH_COMMAND_H_
