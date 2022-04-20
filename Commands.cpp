@@ -113,32 +113,22 @@ BuiltInCommand::BuiltInCommand(const char *cmd_line)
 {
 }
 
-<<<<<<< HEAD
-ChangePromptCommand::ChangePromptCommand(const char *cmd_line)
-    : BuiltInCommand(cmd_line)
-{
-}
-
-void ChangePromptCommand::execute()
-=======
 //**************chprompt**********************
 ChangePromptCommand::ChangePromptCommand(const char* cmd_line)
  : BuiltInCommand(cmd_line){
 }
 
 void ChangePromptCommand::execute() 
->>>>>>> nitaiWork
 {
   SmallShell &smash = SmallShell::getInstance();
   string new_dir = (args.size() > 1) ? args[1] : "smash";
   smash.changePrompt(new_dir);
 }
 
-<<<<<<< HEAD
 GetCurrDirCommand::GetCurrDirCommand(const char *cmd_line)
     : BuiltInCommand(cmd_line)
 {
-=======
+}
 //**************showpid**********************
 ShowPidCommand::ShowPidCommand(const char* cmd_line)
 : BuiltInCommand(cmd_line){
@@ -146,7 +136,6 @@ ShowPidCommand::ShowPidCommand(const char* cmd_line)
 
 void ShowPidCommand::execute() 
 {
-  //SmallShell &smash = SmallShell::getInstance();
   pid_t pid = getpid();
   printf("%d \n", pid);  
 }
@@ -158,21 +147,32 @@ ChangeDirCommand::ChangeDirCommand(const char* cmd_line)
 
 void ChangeDirCommand::execute() 
 {
+  SmallShell &smash = SmallShell::getInstance();
   char path[COMMAND_ARGS_MAX_LENGTH];
+  if(args.size() > 2)
+  {
+    cout << "smash error: cd: too many arguments" << endl;
+    return;
+  }
   if(args[1].compare("-") == 0) { //cd to last working cd
-    if(this->directories.empty()) {
+    if(smash.isEmpty_dir()) {
+      cout << "smash error: cd: OLDPWD not set" << endl;
       return;
     }
-    strcpy(path, this->directories.top().c_str());
-    this->directories.pop();
+    strcpy(path, smash.top_dir().c_str());
+    smash.pop_dir();
     chdir(path);
     return;
   }
   //push current wd to the stack
-  this->directories.push(getcwd(path, COMMAND_ARGS_MAX_LENGTH));
+  getcwd(path, COMMAND_ARGS_MAX_LENGTH);
+  string s_path = path;
+  smash.push_dir(s_path);
   //cd to whatever path specified
-  chdir(args[1].c_str());
->>>>>>> nitaiWork
+  int res = chdir(args[1].c_str());
+  if(res == -1) {
+    cout << "smash error: chdir failed" << endl;
+  }
 }
 
 void GetCurrDirCommand::execute()
@@ -211,7 +211,6 @@ Command *SmallShell::CreateCommand(const char *cmd_line)
   string cmd_s = _trim(string(cmd_line));
   string firstWord = cmd_s.substr(0, cmd_s.find_first_of(" \n"));
 
-<<<<<<< HEAD
   if (firstWord.compare("chprompt") == 0)
   {
     return new ChangePromptCommand(cmd_line);
@@ -220,10 +219,6 @@ Command *SmallShell::CreateCommand(const char *cmd_line)
   {
     return new GetCurrDirCommand(cmd_line);
   }
-  else
-    return nullptr;
-=======
->>>>>>> nitaiWork
   /*
   else if (firstWord.compare("pwd") == 0) {
     return new GetCurrDirCommand(cmd_line);
@@ -262,4 +257,20 @@ void SmallShell::printPtompt()
 void SmallShell::changePrompt(string new_prompt)
 {
   prompt = new_prompt;
+}
+void SmallShell::push_dir(string dir)
+{
+  this->directories.push(dir);
+}
+void SmallShell::pop_dir()
+{
+  this->directories.pop();
+}
+string SmallShell::top_dir()
+{
+  return this->directories.top();
+}
+bool SmallShell::isEmpty_dir()
+{
+  return this->directories.empty();
 }
