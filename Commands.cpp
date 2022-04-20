@@ -1,31 +1,6 @@
-#include <unistd.h>
-#include <string.h>
-#include <iostream>
-#include <vector>
-#include <sstream>
-#include <sys/wait.h>
-#include <stdio.h>
-#include <sys/types.h>
-#include <iomanip>
 #include "Commands.h"
-#include <time.h>
-#include <utime.h>
 
-using namespace std;
-
-#if 0
-#define FUNC_ENTRY() \
-  cout << __PRETTY_FUNCTION__ << " --> " << endl;
-
-#define FUNC_EXIT() \
-  cout << __PRETTY_FUNCTION__ << " <-- " << endl;
-#else
-#define FUNC_ENTRY()
-#define FUNC_EXIT()
-#endif
-
-const std::string WHITESPACE = " \n\r\t\f\v";
-
+//**************text parsing**********************
 string _ltrim(const std::string &s)
 {
   size_t start = s.find_first_not_of(WHITESPACE);
@@ -101,18 +76,20 @@ void _removeBackgroundSign(char *cmd_line)
   cmd_line[str.find_last_not_of(WHITESPACE, idx) + 1] = 0;
 }
 
-// TODO: Add your implementation for classes in Commands.h
+//**************classes implementation**********************
 
+//**************Command**********************
 Command::Command(const char *cmd_line)
 {
   args = _parseCommandLineVector(cmd_line);
 }
 
-string Command::getCmpName()
+string Command::getCmdName()
 {
   return args[0];
 }
 
+//**************BuiltInCommand**********************
 BuiltInCommand::BuiltInCommand(const char *cmd_line)
     : Command(cmd_line)
 {
@@ -198,11 +175,11 @@ void GetCurrDirCommand::execute()
   std::cout << curr_dir << std::endl;
 }
 
-
+//**************JobEntry**********************
 JobsList::JobEntry::JobEntry(Command *cmd, int process_id, bool isStopped)
     : process_id(process_id), isStopped(isStopped)
 {
-  cmd_name = cmd->getCmpName();
+  cmd_name = cmd->getCmdName();
   time(&create_time);
 }
 
@@ -217,6 +194,12 @@ void JobsList::JobEntry::printJob()
   std::cout << std::endl;
 }
 
+//**************JobList**********************
+JobsList::JobsList()
+    : max_id(1)
+{
+}
+
 void JobsList::printJobsList()
 {
   for (auto &job_it : jobs)
@@ -226,16 +209,12 @@ void JobsList::printJobsList()
   }
 }
 
-JobsList::JobsList()
-    : max_id(1)
-{
-}
-
 void JobsList::addJob(Command *cmd, bool isStopped)
 {
   jobs.insert(pair<int, JobEntry>(max_id++, JobsList::JobEntry(cmd, 2, isStopped)));
 }
 
+//**************JobsCommand**********************
 JobsCommand::JobsCommand(const char *cmd_line, JobsList *jobs)
     : BuiltInCommand(cmd_line), job_ptr(jobs)
 {
@@ -248,6 +227,7 @@ void JobsCommand::execute()
   job_ptr->printJobsList();
 }
 
+//**************SmallShell**********************
 SmallShell::SmallShell() : prompt("smash")
 {
   // TODO: add your implementation

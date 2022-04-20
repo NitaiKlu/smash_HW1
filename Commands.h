@@ -1,17 +1,45 @@
 #ifndef SMASH_COMMAND_H_
 #define SMASH_COMMAND_H_
 
-#include <stack>
+#include <unistd.h>
+#include <string.h>
+#include <iostream>
 #include <vector>
+#include <sstream>
+#include <sys/wait.h>
+#include <stdio.h>
+#include <sys/types.h>
+#include <iomanip>
+#include <time.h>
+#include <utime.h>
+#include <stack>
+#include <string>
+#include <map>
+
+using std::cout;
+using std::endl;
 using std::vector;
 using std::stack;
-#include <string>
+using std::pair;
 using std::string;
-#include <map>
 using std::map;
+
+#if 0
+#define FUNC_ENTRY() \
+  cout << __PRETTY_FUNCTION__ << " --> " << endl;
+
+#define FUNC_EXIT() \
+  cout << __PRETTY_FUNCTION__ << " <-- " << endl;
+#else
+#define FUNC_ENTRY()
+#define FUNC_EXIT()
+#endif
 
 #define COMMAND_ARGS_MAX_LENGTH (200)
 #define COMMAND_MAX_ARGS (20)
+
+const std::string WHITESPACE = " \n\r\t\f\v";
+
 
 class Command {
 // TODO: Add your data members
@@ -24,7 +52,7 @@ protected:
   //virtual void prepare();
   //virtual void cleanup();
   // TODO: Add your extra methods if needed
-  string getCmpName();
+  string getCmdName();
 };
 
 class BuiltInCommand : public Command {

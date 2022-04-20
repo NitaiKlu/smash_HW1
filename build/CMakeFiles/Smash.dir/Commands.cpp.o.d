@@ -1,6 +1,7 @@
 CMakeFiles/Smash.dir/Commands.cpp.o: \
  /home/student/Desktop/OS/smash_HW1/Commands.cpp \
- /usr/include/stdc-predef.h /usr/include/unistd.h /usr/include/features.h \
+ /usr/include/stdc-predef.h /home/student/Desktop/OS/smash_HW1/Commands.h \
+ /usr/include/unistd.h /usr/include/features.h \
  /usr/include/x86_64-linux-gnu/sys/cdefs.h \
  /usr/include/x86_64-linux-gnu/bits/wordsize.h \
  /usr/include/x86_64-linux-gnu/bits/long-double.h \
@@ -175,10 +176,9 @@ CMakeFiles/Smash.dir/Commands.cpp.o: \
  /usr/include/c++/7/tuple /usr/include/c++/7/array \
  /usr/include/c++/7/bits/uses_allocator.h \
  /usr/include/c++/7/bits/invoke.h /usr/include/c++/7/bits/quoted_string.h \
- /home/student/Desktop/OS/smash_HW1/Commands.h /usr/include/c++/7/stack \
- /usr/include/c++/7/deque /usr/include/c++/7/bits/stl_deque.h \
- /usr/include/c++/7/bits/deque.tcc /usr/include/c++/7/bits/stl_stack.h \
- /usr/include/c++/7/map /usr/include/c++/7/bits/stl_tree.h \
+ /usr/include/utime.h /usr/include/c++/7/stack /usr/include/c++/7/deque \
+ /usr/include/c++/7/bits/stl_deque.h /usr/include/c++/7/bits/deque.tcc \
+ /usr/include/c++/7/bits/stl_stack.h /usr/include/c++/7/map \
+ /usr/include/c++/7/bits/stl_tree.h \
  /usr/include/c++/7/ext/aligned_buffer.h \
- /usr/include/c++/7/bits/stl_map.h /usr/include/c++/7/bits/stl_multimap.h \
- /usr/include/utime.h
+ /usr/include/c++/7/bits/stl_map.h /usr/include/c++/7/bits/stl_multimap.h
