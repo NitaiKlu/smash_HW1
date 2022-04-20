@@ -45,7 +45,7 @@ class Command {
 protected:
   vector<string> args;
  public:
-  Command(const char* cmd_line);
+  Command(const char* cmd_line, int type);
   virtual ~Command() = default;
   virtual void execute() = 0;
   //virtual void prepare();
@@ -143,6 +143,7 @@ class JobsList {
   JobEntry(Command* cmd, int process_id, bool isStopped);
   ~JobEntry() = default;
   void printJob();
+  int getProcessID();
   };
  // TODO: Add your data members
     int max_id;
@@ -158,6 +159,7 @@ class JobsList {
   void removeJobById(int jobId);
   JobEntry * getLastJob(int* lastJobId);
   JobEntry *getLastStoppedJob(int *jobId);
+  int getPID(int jobID);
   // TODO: Add extra methods or modify exisitng ones as needed
 };
 
@@ -171,7 +173,9 @@ class JobsCommand : public BuiltInCommand {
 };
 
 class KillCommand : public BuiltInCommand {
- // TODO: Add your data members
+ private:
+ int job_id;
+ JobsList* job_ptr;
  public:
   KillCommand(const char* cmd_line, JobsList* jobs);
   virtual ~KillCommand() {}

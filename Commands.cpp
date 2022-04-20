@@ -1,5 +1,5 @@
 #include "Commands.h"
-
+#define BUILT_IN 1
 //**************text parsing**********************
 string _ltrim(const std::string &s)
 {
@@ -78,8 +78,16 @@ void _removeBackgroundSign(char *cmd_line)
 //**************classes implementation**********************
 
 //**************Command**********************
-Command::Command(const char *cmd_line)
+Command::Command(const char *cmd_line, int type)
 {
+  if(type == BUILT_IN && _isBackgroundComamnd(cmd_line)) {
+    char* cmd_line_new = new char[COMMAND_ARGS_MAX_LENGTH];
+    strcpy(cmd_line_new, cmd_line);
+    _removeBackgroundSign(cmd_line_new);
+    args = _parseCommandLineVector(cmd_line_new);
+    delete cmd_line_new;
+    return;
+  }
   args = _parseCommandLineVector(cmd_line);
 }
 
@@ -104,7 +112,7 @@ char **Command::getArgsArr()
 
 //**************BuiltInCommand**********************
 BuiltInCommand::BuiltInCommand(const char *cmd_line)
-    : Command(cmd_line)
+    : Command(cmd_line, BUILT_IN)
 {
 }
 
@@ -207,6 +215,10 @@ void JobsList::JobEntry::printJob()
   std::cout << std::endl;
 }
 
+int JobsList::JobEntry::getProcessID() {
+  return this->process_id;
+}
+
 //**************JobList**********************
 JobsList::JobsList()
     : max_id(1)
@@ -227,6 +239,14 @@ void JobsList::addJob(Command *cmd, bool isStopped)
   jobs.insert(pair<int, JobEntry>(max_id++, JobsList::JobEntry(cmd, 2, isStopped)));
 }
 
+int JobsList::getPID(int jobId) {
+  if(jobs.find(jobId) == jobs.end()) {
+    return -1;
+  }
+  auto job = this->jobs.find(jobId)->second;
+  return job.getProcessID();
+}
+
 //**************JobsCommand**********************
 JobsCommand::JobsCommand(const char *cmd_line, JobsList *jobs)
     : BuiltInCommand(cmd_line), job_ptr(jobs)
@@ -239,10 +259,48 @@ void JobsCommand::execute()
   job_ptr->addJob(this, true);
   job_ptr->printJobsList();
 }
+//**************Kill Command**********************
+bool is_number(const std::string& s)
+{
+    std::string::const_iterator it = s.begin();
+    while (it != s.end() && std::isdigit(*it)) ++it;
+    return !s.empty() && it == s.end();
+}
+
+int GetSignal(string flag) { //turns -<signal> to <signal> and returns it as an integer
+  string newFlag = flag.substr(flag.find_first_not_of('-'));
+  if(is_number(newFlag)) {
+    return std::stoi(newFlag);
+  }
+  return -1;
+}
+
+KillCommand::KillCommand(const char* cmd_line, JobsList* jobs)
+: BuiltInCommand(cmd_line), job_ptr(jobs) {}
+
+void KillCommand::execute()
+{
+  int signal = GetSignal(args[1]);
+  //invalid command check:
+  if(args.size() != 3 || signal == -1 || !is_number(args[2]) ) {
+    cout << "smash error: kill: invalid arguments" << endl;
+    return;
+  }
+  //checking for the job in the jobs list:
+  int pid = std::stoi(args[2]);
+  pid = job_ptr->getPID(pid);
+  if(pid == -1) { //job doesn't exist in the Jobs List
+    cout << "smash error: kill: job-id " << args[2] << " does not exist" << endl;
+    return;
+  }
+  if(kill(pid, signal) == -1) {
+    cout << "smash error: kill failed" << endl;
+  }
+}
 
 //**************ExternalCommand**********************
 ExternalCommand::ExternalCommand(const char *cmd_line)
-    : Command(cmd_line)
+    : Command(cmd_line, 0)
 {
 }
 
@@ -288,6 +346,10 @@ Command *SmallShell::CreateCommand(const char *cmd_line)
   else if (firstWord.compare("jobs") == 0)
   {
     return new JobsCommand(cmd_line, &jobs);
+  }
+  else if (firstWord.compare("kill") == 0)
+  {
+    return new KillCommand(cmd_line, &jobs);
   }
   else
   {
