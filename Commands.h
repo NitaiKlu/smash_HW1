@@ -1,8 +1,10 @@
 #ifndef SMASH_COMMAND_H_
 #define SMASH_COMMAND_H_
 
+#include <stack>
 #include <vector>
 using std::vector;
+using std::stack;
 #include <string>
 using std::string;
 
@@ -53,8 +55,17 @@ class RedirectionCommand : public Command {
   //void cleanup() override;
 };
 
-class ChangeDirCommand : public BuiltInCommand {
+class ChangePromptCommand : public BuiltInCommand {
 // TODO: Add your data members 
+public:
+  ChangePromptCommand(const char* cmd_line);
+  virtual ~ChangePromptCommand() = default;
+  void execute() override;
+};
+
+class ChangeDirCommand : public BuiltInCommand {
+private:
+  stack<string> directories;
 public:
   ChangeDirCommand(const char* cmd_line);
   virtual ~ChangeDirCommand() = default;
