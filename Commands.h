@@ -1,8 +1,10 @@
 #ifndef SMASH_COMMAND_H_
 #define SMASH_COMMAND_H_
 
+#include <stack>
 #include <vector>
 using std::vector;
+using std::stack;
 #include <string>
 using std::string;
 #include <map>
@@ -61,6 +63,18 @@ class ChangePromptCommand : public BuiltInCommand {
 public:
   ChangePromptCommand(const char* cmd_line);
   virtual ~ChangePromptCommand() = default;
+<<<<<<< HEAD
+=======
+  void execute() override;
+};
+
+class ChangeDirCommand : public BuiltInCommand {
+private:
+  stack<string> directories;
+public:
+  ChangeDirCommand(const char* cmd_line);
+  virtual ~ChangeDirCommand() = default;
+>>>>>>> nitaiWork
   void execute() override;
 };
 
@@ -78,13 +92,6 @@ class ShowPidCommand : public BuiltInCommand {
   void execute() override;
 };
 
-class ChangeDirCommand : public BuiltInCommand {
-// TODO: Add your data members 
-public:
-  ChangeDirCommand(const char* cmd_line);
-  virtual ~ChangeDirCommand();
-  void execute() override;
-};
 
 class JobsList;
 class QuitCommand : public BuiltInCommand {
