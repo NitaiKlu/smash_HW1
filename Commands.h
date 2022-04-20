@@ -22,6 +22,7 @@ protected:
   //virtual void prepare();
   //virtual void cleanup();
   // TODO: Add your extra methods if needed
+  string getCmpName();
 };
 
 class BuiltInCommand : public Command {
@@ -102,20 +103,21 @@ class JobsList {
   class JobEntry {
    // TODO: Add your data members
    private:
-    string cmd;
+    string cmd_name;
     int process_id;
-    int create_time;
+    time_t create_time;
     bool isStopped;
   public:
-  JobEntry(string cmd, int process_id, int create_time, bool isStopped);
+  JobEntry(Command* cmd, int process_id, bool isStopped);
   ~JobEntry() = default;
+  void printJob();
   };
  // TODO: Add your data members
     int max_id;
     map<int, JobEntry> jobs;
  public:
   JobsList();
-  ~JobsList();
+  ~JobsList() = default;
   void addJob(Command* cmd, bool isStopped = false);
   void printJobsList();
   void killAllJobs();
@@ -129,6 +131,7 @@ class JobsList {
 
 class JobsCommand : public BuiltInCommand {
  // TODO: Add your data members
+ JobsList *job_ptr;
  public:
   JobsCommand(const char* cmd_line, JobsList* jobs);
   virtual ~JobsCommand() {}
@@ -179,6 +182,7 @@ class SmallShell {
  
   // TODO: Add your data members
   string prompt;
+  JobsList jobs;
   SmallShell();
  public:
   Command *CreateCommand(const char* cmd_line);

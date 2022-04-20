@@ -106,6 +106,10 @@ Command::Command(const char *cmd_line)
   args = _parseCommandLineVector(cmd_line);
 }
 
+string Command::getCmpName(){
+  return args[0];
+}
+
 BuiltInCommand::BuiltInCommand(const char *cmd_line)
     : Command(cmd_line)
 {
@@ -135,16 +139,54 @@ void GetCurrDirCommand::execute()
   std::cout << curr_dir << std::endl;
 }
 
-JobsList::JobEntry::JobEntry(string cmd, int process_id, int create_time, bool isStopped)
- : cmd(cmd), process_id(process_id),create_time(create_time),isStopped(isStopped)
- {
+JobsList::JobEntry::JobEntry(Command* cmd, int process_id, bool isStopped)
+    : process_id(process_id), isStopped(isStopped)
+{
+  cmd_name = cmd->getCmpName();
+  time(&create_time);
+}
 
- }
+void JobsList::JobEntry::printJob()
+{
+  time_t now;
+  time(&now);
+  double elapsed = difftime(now, create_time);
+  std::cout << cmd_name << " : " << process_id << " " << elapsed << " secs";
+  if (isStopped)
+    std::cout << " (stopped)";
+  std::cout << std::endl;
+}
+
+void JobsList::printJobsList()
+{
+  for (auto &job_it : jobs)
+  {
+    std::cout << "[" << job_it.first << "] ";
+    job_it.second.printJob();
+  }
+}
 
 JobsList::JobsList()
- : max_id(0){
+    : max_id(1)
+{
+}
 
- }
+void JobsList::addJob(Command* cmd, bool isStopped)
+{
+  jobs.insert(pair<int,JobEntry>(max_id++,JobsList::JobEntry(cmd,2,isStopped)));
+}
+
+JobsCommand::JobsCommand(const char *cmd_line, JobsList *jobs)
+    : BuiltInCommand(cmd_line), job_ptr(jobs)
+{
+}
+
+void JobsCommand::execute()
+{
+  job_ptr->addJob(this);
+  job_ptr->addJob(this, true);
+  job_ptr->printJobsList();
+}
 
 SmallShell::SmallShell() : prompt("smash")
 {
@@ -171,6 +213,10 @@ Command *SmallShell::CreateCommand(const char *cmd_line)
   else if (firstWord.compare("pwd") == 0)
   {
     return new GetCurrDirCommand(cmd_line);
+  }
+  else if (firstWord.compare("jobs") == 0)
+  {
+    return new JobsCommand(cmd_line, &jobs);
   }
   else
     return nullptr;
