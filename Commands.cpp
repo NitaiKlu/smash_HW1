@@ -96,21 +96,23 @@ void _removeBackgroundSign(char* cmd_line) {
 
 Command::Command(const char* cmd_line)
 {
-  
   args = _parseCommandLineVector(cmd_line);
 }
 
 BuiltInCommand::BuiltInCommand(const char* cmd_line)
- : Command(cmd_line) {
+ : Command(cmd_line){
 
 }
 
-ChangeDirCommand::ChangeDirCommand(const char* cmd_line, string* plastPwd)
+ChangeDirCommand::ChangeDirCommand(const char* cmd_line)
  : BuiltInCommand(cmd_line){
 }
+
 void ChangeDirCommand::execute() 
 {
-
+  SmallShell &smash = SmallShell::getInstance();
+  smash.changeDir(args[1]);
+  //*ptrDir = args[1];
 }
 
 
@@ -129,12 +131,12 @@ SmallShell::~SmallShell() {
 Command * SmallShell::CreateCommand(const char* cmd_line) {
   string cmd_s = _trim(string(cmd_line));
   string firstWord = cmd_s.substr(0, cmd_s.find_first_of(" \n"));
-  int firstWordLen = firstWord.length();
-  string secondWord = cmd_s.substr(firstWordLen, cmd_s.find_first_of(" \n"));
 
   if (firstWord.compare("chprompt") == 0) {
-    return new ChangeDirCommand(cmd_line, &dir);
+    return new ChangeDirCommand(cmd_line);
   }
+  else return nullptr;
+  /*
   else if (firstWord.compare("pwd") == 0) {
     return new GetCurrDirCommand(cmd_line);
   }
@@ -145,16 +147,21 @@ Command * SmallShell::CreateCommand(const char* cmd_line) {
     return new ExternalCommand(cmd_line);
   }
   return nullptr;
+  */
 }
 
 void SmallShell::executeCommand(const char *cmd_line) {
   // TODO: Add your implementation here
   // for example:
-  // Command* cmd = CreateCommand(cmd_line);
-  // cmd->execute();
+   Command* cmd = CreateCommand(cmd_line);
+   cmd->execute();
   // Please note that you must fork smash process for some commands (e.g., external commands....)
 }
 
 void SmallShell::printDir(){
   std::cout << dir;
+}
+void SmallShell::changeDir(string new_dir)
+{
+  dir = new_dir;
 }

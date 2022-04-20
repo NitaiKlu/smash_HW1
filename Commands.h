@@ -11,10 +11,11 @@ using std::string;
 
 class Command {
 // TODO: Add your data members
+protected:
   vector<string> args;
  public:
   Command(const char* cmd_line);
-  virtual ~Command();
+  virtual ~Command() = default;
   virtual void execute() = 0;
   //virtual void prepare();
   //virtual void cleanup();
@@ -54,10 +55,8 @@ class RedirectionCommand : public Command {
 
 class ChangeDirCommand : public BuiltInCommand {
 // TODO: Add your data members 
-private:
-  string def = "smash";
 public:
-  ChangeDirCommand(const char* cmd_line, string* plastPwd);
+  ChangeDirCommand(const char* cmd_line);
   virtual ~ChangeDirCommand() = default;
   void execute() override;
 };
@@ -157,6 +156,7 @@ class TouchCommand : public BuiltInCommand {
 
 class SmallShell {
  private:
+ 
   // TODO: Add your data members
   string dir;
   SmallShell();
@@ -174,6 +174,7 @@ class SmallShell {
   void executeCommand(const char* cmd_line);
   // TODO: add extra methods as needed
   void printDir();
+  void changeDir(string new_dir);
 };
 
 #endif //SMASH_COMMAND_H_
