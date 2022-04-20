@@ -156,15 +156,18 @@ CMakeFiles/Smash.dir/smash.cpp.o: \
  /usr/include/x86_64-linux-gnu/bits/ss_flags.h \
  /usr/include/x86_64-linux-gnu/bits/types/struct_sigstack.h \
  /usr/include/x86_64-linux-gnu/bits/sigthread.h \
- /home/student/Desktop/OS/smash_HW1/Commands.h /usr/include/c++/7/vector \
- /usr/include/c++/7/bits/stl_construct.h \
+ /home/student/Desktop/OS/smash_HW1/Commands.h /usr/include/c++/7/stack \
+ /usr/include/c++/7/deque /usr/include/c++/7/bits/stl_construct.h \
  /usr/include/c++/7/bits/stl_uninitialized.h \
+ /usr/include/c++/7/bits/stl_deque.h /usr/include/c++/7/bits/deque.tcc \
+ /usr/include/c++/7/bits/stl_stack.h \
+ /usr/include/c++/7/bits/uses_allocator.h /usr/include/c++/7/vector \
  /usr/include/c++/7/bits/stl_vector.h \
  /usr/include/c++/7/bits/stl_bvector.h /usr/include/c++/7/bits/vector.tcc \
  /usr/include/c++/7/map /usr/include/c++/7/bits/stl_tree.h \
  /usr/include/c++/7/ext/aligned_buffer.h \
  /usr/include/c++/7/bits/stl_map.h /usr/include/c++/7/tuple \
  /usr/include/c++/7/utility /usr/include/c++/7/bits/stl_relops.h \
- /usr/include/c++/7/array /usr/include/c++/7/bits/uses_allocator.h \
- /usr/include/c++/7/bits/invoke.h /usr/include/c++/7/bits/stl_multimap.h \
+ /usr/include/c++/7/array /usr/include/c++/7/bits/invoke.h \
+ /usr/include/c++/7/bits/stl_multimap.h \
  /home/student/Desktop/OS/smash_HW1/signals.h

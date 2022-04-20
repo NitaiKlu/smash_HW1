@@ -63,8 +63,6 @@ class ChangePromptCommand : public BuiltInCommand {
 public:
   ChangePromptCommand(const char* cmd_line);
   virtual ~ChangePromptCommand() = default;
-<<<<<<< HEAD
-=======
   void execute() override;
 };
 
@@ -74,7 +72,6 @@ private:
 public:
   ChangeDirCommand(const char* cmd_line);
   virtual ~ChangeDirCommand() = default;
->>>>>>> nitaiWork
   void execute() override;
 };
 
@@ -190,6 +187,7 @@ class SmallShell {
   // TODO: Add your data members
   string prompt;
   JobsList jobs;
+  stack<string> directories;
   SmallShell();
  public:
   Command *CreateCommand(const char* cmd_line);
@@ -206,6 +204,10 @@ class SmallShell {
   // TODO: add extra methods as needed
   void printPtompt();
   void changePrompt(string new_prompt);
+  void push_dir(string dir);
+  void pop_dir();
+  string top_dir();
+  bool isEmpty_dir();
 };
 
 #endif //SMASH_COMMAND_H_

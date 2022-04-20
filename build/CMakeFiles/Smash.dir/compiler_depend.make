@@ -225,6 +225,11 @@ CMakeFiles/Smash.dir/Commands.cpp.o: ../Commands.cpp \
   /usr/include/c++/7/bits/invoke.h \
   /usr/include/c++/7/bits/quoted_string.h \
   ../Commands.h \
+  /usr/include/c++/7/stack \
+  /usr/include/c++/7/deque \
+  /usr/include/c++/7/bits/stl_deque.h \
+  /usr/include/c++/7/bits/deque.tcc \
+  /usr/include/c++/7/bits/stl_stack.h \
   /usr/include/c++/7/map \
   /usr/include/c++/7/bits/stl_tree.h \
   /usr/include/c++/7/ext/aligned_buffer.h \
@@ -419,9 +424,15 @@ CMakeFiles/Smash.dir/signals.cpp.o: ../signals.cpp \
   /usr/include/x86_64-linux-gnu/bits/sigthread.h \
   ../signals.h \
   ../Commands.h \
-  /usr/include/c++/7/vector \
+  /usr/include/c++/7/stack \
+  /usr/include/c++/7/deque \
   /usr/include/c++/7/bits/stl_construct.h \
   /usr/include/c++/7/bits/stl_uninitialized.h \
+  /usr/include/c++/7/bits/stl_deque.h \
+  /usr/include/c++/7/bits/deque.tcc \
+  /usr/include/c++/7/bits/stl_stack.h \
+  /usr/include/c++/7/bits/uses_allocator.h \
+  /usr/include/c++/7/vector \
   /usr/include/c++/7/bits/stl_vector.h \
   /usr/include/c++/7/bits/stl_bvector.h \
   /usr/include/c++/7/bits/vector.tcc \
@@ -433,7 +444,6 @@ CMakeFiles/Smash.dir/signals.cpp.o: ../signals.cpp \
   /usr/include/c++/7/utility \
   /usr/include/c++/7/bits/stl_relops.h \
   /usr/include/c++/7/array \
-  /usr/include/c++/7/bits/uses_allocator.h \
   /usr/include/c++/7/bits/invoke.h \
   /usr/include/c++/7/bits/stl_multimap.h
 
@@ -630,9 +640,15 @@ CMakeFiles/Smash.dir/smash.cpp.o: ../smash.cpp \
   /usr/include/x86_64-linux-gnu/bits/types/struct_sigstack.h \
   /usr/include/x86_64-linux-gnu/bits/sigthread.h \
   ../Commands.h \
-  /usr/include/c++/7/vector \
+  /usr/include/c++/7/stack \
+  /usr/include/c++/7/deque \
   /usr/include/c++/7/bits/stl_construct.h \
   /usr/include/c++/7/bits/stl_uninitialized.h \
+  /usr/include/c++/7/bits/stl_deque.h \
+  /usr/include/c++/7/bits/deque.tcc \
+  /usr/include/c++/7/bits/stl_stack.h \
+  /usr/include/c++/7/bits/uses_allocator.h \
+  /usr/include/c++/7/vector \
   /usr/include/c++/7/bits/stl_vector.h \
   /usr/include/c++/7/bits/stl_bvector.h \
   /usr/include/c++/7/bits/vector.tcc \
@@ -644,7 +660,6 @@ CMakeFiles/Smash.dir/smash.cpp.o: ../smash.cpp \
   /usr/include/c++/7/utility \
   /usr/include/c++/7/bits/stl_relops.h \
   /usr/include/c++/7/array \
-  /usr/include/c++/7/bits/uses_allocator.h \
   /usr/include/c++/7/bits/invoke.h \
   /usr/include/c++/7/bits/stl_multimap.h \
   ../signals.h
@@ -661,6 +676,12 @@ CMakeFiles/Smash.dir/smash.cpp.o: ../smash.cpp \
 /usr/include/c++/7/bits/stl_tree.h:
 
 /usr/include/c++/7/map:
+
+/usr/include/c++/7/bits/deque.tcc:
+
+/usr/include/c++/7/deque:
+
+/usr/include/c++/7/stack:
 
 ../Commands.h:
 
@@ -703,6 +724,8 @@ CMakeFiles/Smash.dir/smash.cpp.o: ../smash.cpp \
 /usr/include/x86_64-linux-gnu/bits/types/sigval_t.h:
 
 /usr/include/x86_64-linux-gnu/bits/siginfo-consts.h:
+
+/usr/include/c++/7/bits/stl_deque.h:
 
 /usr/include/x86_64-linux-gnu/bits/siginfo-arch.h:
 
@@ -817,6 +840,8 @@ CMakeFiles/Smash.dir/smash.cpp.o: ../smash.cpp \
 /usr/include/c++/7/bits/exception.h:
 
 /usr/include/x86_64-linux-gnu/bits/wchar.h:
+
+/usr/include/c++/7/bits/stl_stack.h:
 
 /usr/include/x86_64-linux-gnu/bits/confname.h:
 
