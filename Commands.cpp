@@ -80,8 +80,9 @@ void _removeBackgroundSign(char *cmd_line)
 //**************Command**********************
 Command::Command(const char *cmd_line, int type)
 {
-  if(type == BUILT_IN && _isBackgroundComamnd(cmd_line)) {
-    char* cmd_line_new = new char[COMMAND_ARGS_MAX_LENGTH];
+  if (type == BUILT_IN && _isBackgroundComamnd(cmd_line))
+  {
+    char *cmd_line_new = new char[COMMAND_ARGS_MAX_LENGTH];
     strcpy(cmd_line_new, cmd_line);
     _removeBackgroundSign(cmd_line_new);
     args = _parseCommandLineVector(cmd_line_new);
@@ -91,22 +92,24 @@ Command::Command(const char *cmd_line, int type)
   args = _parseCommandLineVector(cmd_line);
 }
 
-string Command::getCmdName()
+string Command::getCmdStr()
 {
-  return args[0];
+  string str = "";
+  for (auto arg : args)
+  {
+    str += arg;
+    str += " ";
+  }
+  return str;
 }
 
 char **Command::getArgsArr()
 {
-  int len = args.size();
-  char **argsArr = new char *[len + 3];
+  char **argsArr = new char *[4];
   argsArr[0] = (char *)("/bin/bash");
   argsArr[1] = (char *)("-c");
-  for (int i = 2; i < len + 2; i++)
-  {
-    argsArr[i] = const_cast<char *>(args[i - 2].c_str());
-  }
-  argsArr[len + 2] = NULL;
+  argsArr[2] = const_cast<char *>(getCmdStr().c_str());
+  argsArr[3] = NULL;
   return argsArr;
 }
 
@@ -200,7 +203,7 @@ void GetCurrDirCommand::execute()
 JobsList::JobEntry::JobEntry(Command *cmd, int process_id, bool isStopped)
     : process_id(process_id), isStopped(isStopped)
 {
-  cmd_name = cmd->getCmdName();
+  cmd_name = cmd->getCmdStr();
   time(&create_time);
 }
 
@@ -209,14 +212,26 @@ void JobsList::JobEntry::printJob()
   time_t now;
   time(&now);
   double elapsed = difftime(now, create_time);
-  std::cout << cmd_name << " : " << process_id << " " << elapsed << " secs";
+  std::cout << cmd_name << ": " << process_id << " " << elapsed << " secs";
   if (isStopped)
     std::cout << " (stopped)";
   std::cout << std::endl;
 }
 
-int JobsList::JobEntry::getProcessID() {
+int JobsList::JobEntry::getProcessID()
+{
   return this->process_id;
+}
+
+void JobsList::JobEntry::printAndDie()
+{
+  std::cout << process_id << ": " << cmd_name << std::endl;
+  exit(0);
+}
+
+void JobsList::JobEntry::stopJob()
+{
+  isStopped = true;
 }
 
 //**************JobList**********************
@@ -234,17 +249,95 @@ void JobsList::printJobsList()
   }
 }
 
-void JobsList::addJob(Command *cmd, bool isStopped)
+void JobsList::addJob(Command *cmd, int process_id, bool isForeground, bool isStopped)
 {
-  jobs.insert(pair<int, JobEntry>(max_id++, JobsList::JobEntry(cmd, 2, isStopped)));
+  removeFinishedJobs();
+  JobsList::JobEntry job(cmd, process_id, isStopped);
+  if (isForeground)
+  {
+    foregroundJob.push(job);
+  }
+  else
+  {
+    jobs.insert(pair<int, JobEntry>(max_id++, job));
+  }
 }
 
-int JobsList::getPID(int jobId) {
-  if(jobs.find(jobId) == jobs.end()) {
+void JobsList::addJob(JobEntry &job)
+{
+  removeFinishedJobs();
+  jobs.insert(pair<int, JobEntry>(max_id++, job));
+}
+
+void JobsList::killAllJobs()
+{
+  std::cout << "sending SIGKILL signal to " << getCount() << " jobs:" << std::endl;
+  for (auto job_pair : jobs)
+  {
+    job_pair.second.printAndDie();
+  }
+}
+
+void JobsList::removeFinishedJobs()
+{
+  if (jobs.empty() == 1)
+    return;
+  pid_t pid;
+  for (auto job_pair_it = jobs.begin(), next_it = job_pair_it; job_pair_it != jobs.end(); job_pair_it = next_it)
+  {
+    ++next_it;
+    pid = job_pair_it->second.getProcessID();
+    if (waitpid(pid, nullptr, WNOHANG) == pid)
+    {
+      removeJobById(job_pair_it->first);
+    }
+  }
+}
+
+void JobsList::removeJobById(int jobId)
+{
+  jobs.erase(jobId);
+  if (jobId == max_id - 1)
+  {
+    max_id = (jobs.empty()) ? 0 : jobs.rbegin()->first;
+    max_id++;
+  }
+}
+
+int JobsList::getPID(int jobId)
+{
+  if (jobs.find(jobId) == jobs.end())
+  {
     return -1;
   }
   auto job = this->jobs.find(jobId)->second;
   return job.getProcessID();
+}
+
+int JobsList::getCount()
+{
+  return jobs.size();
+}
+
+void JobsList::killForegroundJob()
+{
+  foregroundJob.pop();
+}
+
+bool JobsList::isForeground()
+{
+  return !foregroundJob.empty();
+}
+pid_t JobsList::getForegroundPid()
+{
+  return foregroundJob.top().getProcessID();
+}
+void JobsList::stopForeground()
+{
+ JobsList::JobEntry job = foregroundJob.top();
+ foregroundJob.pop();
+ job.stopJob();
+ addJob(job);
 }
 
 //**************JobsCommand**********************
@@ -255,47 +348,68 @@ JobsCommand::JobsCommand(const char *cmd_line, JobsList *jobs)
 
 void JobsCommand::execute()
 {
-  job_ptr->addJob(this);
-  job_ptr->addJob(this, true);
+  job_ptr->removeFinishedJobs();
   job_ptr->printJobsList();
 }
+
 //**************Kill Command**********************
-bool is_number(const std::string& s)
+bool is_number(const std::string &s)
 {
-    std::string::const_iterator it = s.begin();
-    while (it != s.end() && std::isdigit(*it)) ++it;
-    return !s.empty() && it == s.end();
+  std::string::const_iterator it = s.begin();
+  while (it != s.end() && std::isdigit(*it))
+    ++it;
+  return !s.empty() && it == s.end();
 }
 
-int GetSignal(string flag) { //turns -<signal> to <signal> and returns it as an integer
+int GetSignal(string flag)
+{ // turns -<signal> to <signal> and returns it as an integer
   string newFlag = flag.substr(flag.find_first_not_of('-'));
-  if(is_number(newFlag)) {
+  if (is_number(newFlag))
+  {
     return std::stoi(newFlag);
   }
   return -1;
 }
 
-KillCommand::KillCommand(const char* cmd_line, JobsList* jobs)
-: BuiltInCommand(cmd_line), job_ptr(jobs) {}
+KillCommand::KillCommand(const char *cmd_line, JobsList *jobs)
+    : BuiltInCommand(cmd_line), job_ptr(jobs) {}
 
 void KillCommand::execute()
 {
   int signal = GetSignal(args[1]);
-  //invalid command check:
-  if(args.size() != 3 || signal == -1 || !is_number(args[2]) ) {
+  // invalid command check:
+  if (args.size() != 3 || signal == -1 || !is_number(args[2]))
+  {
     cout << "smash error: kill: invalid arguments" << endl;
     return;
   }
-  //checking for the job in the jobs list:
+  // checking for the job in the jobs list:
   int pid = std::stoi(args[2]);
   pid = job_ptr->getPID(pid);
-  if(pid == -1) { //job doesn't exist in the Jobs List
+  if (pid == -1)
+  { // job doesn't exist in the Jobs List
     cout << "smash error: kill: job-id " << args[2] << " does not exist" << endl;
     return;
   }
-  if(kill(pid, signal) == -1) {
+  if (kill(pid, signal) == -1)
+  {
     cout << "smash error: kill failed" << endl;
   }
+}
+
+//**************QuitCommand**********************
+QuitCommand::QuitCommand(const char *cmd_line, JobsList *jobs)
+    : BuiltInCommand(cmd_line), jobs_ptr(jobs)
+{
+}
+
+void QuitCommand::execute()
+{
+  if (args[1] == "kill")
+  {
+    jobs_ptr->killAllJobs();
+  }
+  exit(0);
 }
 
 //**************ExternalCommand**********************
@@ -309,7 +423,8 @@ void ExternalCommand::execute()
 }
 
 //**************SmallShell**********************
-SmallShell::SmallShell() : prompt("smash")
+SmallShell::SmallShell()
+    : prompt("smash")
 {
   // TODO: add your implementation
 }
@@ -351,6 +466,10 @@ Command *SmallShell::CreateCommand(const char *cmd_line)
   {
     return new KillCommand(cmd_line, &jobs);
   }
+  else if (firstWord.compare("quit") == 0)
+  {
+    return new QuitCommand(cmd_line, &jobs);
+  }
   else
   {
     return new ExternalCommand(cmd_line);
@@ -360,6 +479,7 @@ Command *SmallShell::CreateCommand(const char *cmd_line)
 void SmallShell::executeCommand(const char *cmd_line)
 {
   Command *cmd = CreateCommand(cmd_line);
+  jobs.removeFinishedJobs();
   if (dynamic_cast<ExternalCommand *>(cmd) == nullptr) // Built-in Command
   {
     cmd->execute();
@@ -368,24 +488,53 @@ void SmallShell::executeCommand(const char *cmd_line)
   {
     char **argsArr = cmd->getArgsArr();
     pid_t pid = fork();
-    if (pid == 0) // child
+    if (pid < 0) // fail
     {
+      perror("fork failed");
+    }
+    else if (pid == 0) // child
+    {
+      setpgrp();
       execv(argsArr[0], argsArr);
+      perror("execv failed");
     }
     else // parent
     {
-      wait(NULL);
-      /*
       if (_isBackgroundComamnd(cmd_line))
       {
+        jobs.addJob(cmd, pid);
       }
       else
       {
+        jobs.addJob(cmd, pid, true);
+        int stat;
+        //waitpid(pid, &stat, WUNTRACED);
+        if(waitpid(pid, &stat, WUNTRACED) < 0)
+        {
+          perror("wait failed");
+        }
+        else
+        {
+          if (WIFEXITED(stat)) //child terminated normally
+          {
+            jobs.killForegroundJob();
+          } 
+          else if (WIFSIGNALED(stat)) //child terminated by a signal
+          {
+            int sig = WTERMSIG(stat);
+            if (sig == SIGTSTP)
+            {
+
+            }
+            else if (sig == SIGINT)
+            {
+
+            }
+          }
+        }
       }
-      */
     }
   }
-  // Please note that you must fork smash process for some commands (e.g., external commands....)
 }
 
 void SmallShell::printPtompt()
@@ -411,4 +560,20 @@ string SmallShell::top_dir()
 bool SmallShell::isEmpty_dir()
 {
   return this->directories.empty();
+}
+void SmallShell::killForegroundJob()
+{
+  jobs.killForegroundJob();
+}
+bool SmallShell::isForeground()
+{
+  return jobs.isForeground();
+}
+pid_t SmallShell::getForegroundPid()
+{
+  return jobs.getForegroundPid();
+}
+void SmallShell::stopForeground()
+{
+  jobs.stopForeground();
 }
