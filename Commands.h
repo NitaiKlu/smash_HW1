@@ -146,6 +146,7 @@ private:
     void printJob();
     int getProcessID();
     void printAndDie();
+    void printAlarm();
     void stopJob();
   };
   
@@ -270,6 +271,7 @@ public:
   bool isForeground();
   pid_t getForegroundPid();
   void stopForeground();
+  void AlarmHandle();
 };
 
 #endif // SMASH_COMMAND_H_
