@@ -226,7 +226,7 @@ int JobsList::JobEntry::getProcessID()
 void JobsList::JobEntry::printAndDie()
 {
   std::cout << process_id << ": " << cmd_name << std::endl;
-  exit(0);
+  kill(this->process_id, SIGKILL);
 }
 
 void JobsList::JobEntry::stopJob()
@@ -248,6 +248,11 @@ bool JobsList::JobEntry::isStopped()
 {
   return is_stopped;
 }
+void JobsList::JobEntry::printAlarm()
+{
+  cout << "smash: " << cmd_name <<" timed_out!" << endl;
+}
+
 //**************JobList**********************
 JobsList::JobsList()
     : max_id(0)
@@ -311,9 +316,31 @@ void JobsList::removeFinishedJobs()
   {
     ++next_it;
     pid = job_pair_it->second.getProcessID();
-    if (waitpid(pid, nullptr, WNOHANG) == pid)
+    int stat;
+    pid_t res = waitpid(pid, &stat, WNOHANG);
+    if (res < 0)
     {
-      removeJobById(job_pair_it->first);
+      perror("wait failed");
+    }
+    else
+    {
+      if (WIFEXITED(stat)) // child terminated normally
+      {
+        removeJobById(job_pair_it->first);
+      }
+      else if (WIFSIGNALED(stat)) // child terminated by a signal
+      {
+        int sig = WTERMSIG(stat);
+        if (sig == SIGTSTP)
+        {
+          job_pair_it->second.stopJob();
+        }
+        else if (sig == SIGALRM)
+        {
+          //kill(job_pair_it->first, SIGKILL);
+          job_pair_it->second.printAlarm();
+        }
+      }
     }
   }
 }
@@ -329,11 +356,11 @@ void JobsList::removeJobById(int jobId)
 
 int JobsList::getPID(int jobId)
 {
-  if (jobs.find(jobId) == jobs.end())
+  if (jobs.find(jobId) == jobs.end()) // doesn't exist
   {
     return -1;
   }
-  auto job = this->jobs.find(jobId)->second;
+  auto job = jobs.find(jobId)->second;
   return job.getProcessID();
 }
 
@@ -450,6 +477,10 @@ bool is_number(const std::string &s)
 
 int GetSignal(string flag)
 { // turns -<signal> to <signal> and returns it as an integer
+  if (flag.find_first_not_of('-') != 1)
+  {
+    return -1;
+  }
   string newFlag = flag.substr(flag.find_first_not_of('-'));
   if (is_number(newFlag))
   {
@@ -472,7 +503,7 @@ void KillCommand::execute()
   }
   // checking for the job in the jobs list:
   int pid = std::stoi(args[2]);
-  pid = job_ptr->getPID(pid);
+  pid = job_ptr->getPID(pid); // returns -1 if doesn't exist in the jobs list
   if (pid == -1)
   { // job doesn't exist in the Jobs List
     cout << "smash error: kill: job-id " << args[2] << " does not exist" << endl;
@@ -481,6 +512,10 @@ void KillCommand::execute()
   if (kill(pid, signal) == -1)
   {
     cout << "smash error: kill failed" << endl;
+  }
+  else
+  {
+    cout << "signal number " << signal << " was sent to pid " << pid << endl;
   }
 }
 
@@ -532,7 +567,7 @@ void QuitCommand::execute()
   {
     jobs_ptr->killAllJobs();
   }
-  exit(0);
+  kill(getpid(), SIGKILL);
 }
 
 //**************ExternalCommand**********************
@@ -708,4 +743,7 @@ void SmallShell::runAtFront(pid_t pid)
       }
     }
   }
+void SmallShell::AlarmHandle()
+{
+  jobs.removeFinishedJobs(); //this also handles the alarm thingy
 }

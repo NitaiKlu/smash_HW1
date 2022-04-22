@@ -1,4 +1,5 @@
 #include "signals.h"
+#include "Commands.h"
 using namespace std;
 
 void ctrlZHandler(int sig_num)
@@ -19,11 +20,13 @@ void ctrlCHandler(int sig_num)
   if (!smash.isForeground()) return;
   pid_t pid = smash.getForegroundPid();
   smash.killForegroundJob();
-  kill(pid, SIGTSTP);
+  kill(pid, SIGKILL);
   cout << "smash: process "<< pid <<" was killed" << endl;
 }
 
 void alarmHandler(int sig_num)
 {
-  // TODO: Add your implementation
+  cout << "smash: got an alarm" << endl;
+  SmallShell &smash = SmallShell::getInstance();
+  smash.AlarmHandle();  
 }
