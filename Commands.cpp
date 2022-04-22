@@ -743,6 +743,7 @@ void SmallShell::runAtFront(pid_t pid)
       }
     }
   }
+}
 void SmallShell::AlarmHandle()
 {
   jobs.removeFinishedJobs(); //this also handles the alarm thingy

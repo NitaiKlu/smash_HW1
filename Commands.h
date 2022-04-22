@@ -277,11 +277,8 @@ public:
   bool isForeground();
   pid_t getForegroundPid();
   void stopForeground();
-<<<<<<< HEAD
   void runAtFront(pid_t pid);
-=======
   void AlarmHandle();
->>>>>>> 2204Work
 };
 
 #endif // SMASH_COMMAND_H_
