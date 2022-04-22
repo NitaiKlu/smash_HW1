@@ -15,15 +15,10 @@ int main(int argc, char *argv[])
     {
         perror("smash error: failed to set ctrl-C handler");
     }
-<<<<<<< HEAD
-
-    // TODO: setup sig alarm handler
-=======
     if(signal(SIGALRM , alarmHandler)==SIG_ERR) {
         perror("smash error: failed to set sig-alrm handler");
     }
     //TODO: setup sig alarm handler
->>>>>>> 2204Work
 
     SmallShell &smash = SmallShell::getInstance();
     while (true)

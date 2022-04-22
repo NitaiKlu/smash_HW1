@@ -178,6 +178,7 @@ public:
   pid_t jobIdToFront(int JobId);
   pid_t lastToBack();
   pid_t jobIdToBack(int JobId);
+  void AlarmCheck();
 };
 
 class JobsCommand : public BuiltInCommand
