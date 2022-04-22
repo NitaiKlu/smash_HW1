@@ -37,7 +37,6 @@ using std::vector;
 
 #define COMMAND_ARGS_MAX_LENGTH (200)
 #define COMMAND_MAX_ARGS (20)
-#define NO_PROC (pid_t) - 1
 
 const string WHITESPACE = " \n\r\t\f\v";
 
@@ -138,15 +137,18 @@ private:
     string cmd_name;
     int process_id;
     time_t create_time;
-    bool isStopped;
+    bool is_stopped;
 
   public:
-    JobEntry(Command *cmd, int process_id, bool isStopped);
+    JobEntry(Command *cmd, int process_id, bool is_stopped);
     ~JobEntry() = default;
-    void printJob();
+    void printJobWithTime();
     int getProcessID();
     void printAndDie();
     void stopJob();
+    void contJob();
+    void printJob();
+    bool isStopped();
   };
   
   int max_id;
@@ -156,8 +158,8 @@ private:
 public:
   JobsList();
   ~JobsList() = default;
-  void addJob(Command *cmd, int process_id, bool isForeground = false,bool isStopped = false);
-  void addJob(JobEntry &job);
+  void addJob(Command *cmd, int process_id, bool isForeground = false,bool is_stopped = false);
+  void addJob(JobEntry &job, bool isForeground = false);
   void printJobsList();
   void killAllJobs();
   void removeFinishedJobs();
@@ -171,6 +173,10 @@ public:
   bool isForeground();
   pid_t getForegroundPid();
   void stopForeground();
+  pid_t lastToFront();
+  pid_t jobIdToFront(int JobId);
+  pid_t lastToBack();
+  pid_t jobIdToBack(int JobId);
 };
 
 class JobsCommand : public BuiltInCommand
@@ -198,7 +204,7 @@ public:
 
 class ForegroundCommand : public BuiltInCommand
 {
-  // TODO: Add your data members
+  JobsList *jobs_ptr;
 public:
   ForegroundCommand(const char *cmd_line, JobsList *jobs);
   virtual ~ForegroundCommand() {}
@@ -207,7 +213,7 @@ public:
 
 class BackgroundCommand : public BuiltInCommand
 {
-  // TODO: Add your data members
+  JobsList *jobs_ptr;
 public:
   BackgroundCommand(const char *cmd_line, JobsList *jobs);
   virtual ~BackgroundCommand() {}
@@ -270,6 +276,7 @@ public:
   bool isForeground();
   pid_t getForegroundPid();
   void stopForeground();
+  void runAtFront(pid_t pid);
 };
 
 #endif // SMASH_COMMAND_H_
