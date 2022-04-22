@@ -1,17 +1,17 @@
 [
 {
-  "directory": "/home/student/Desktop/OS/smash_HW1/build",
-  "command": "/usr/bin/g++   -g -o CMakeFiles/Smash.dir/Commands.cpp.o -c /home/student/Desktop/OS/smash_HW1/Commands.cpp",
-  "file": "/home/student/Desktop/OS/smash_HW1/Commands.cpp"
+  "directory": "/home/student/Documents/OS/smash_HW1/build",
+  "command": "/usr/bin/g++   -g -o CMakeFiles/Smash.dir/Commands.cpp.o -c /home/student/Documents/OS/smash_HW1/Commands.cpp",
+  "file": "/home/student/Documents/OS/smash_HW1/Commands.cpp"
 },
 {
-  "directory": "/home/student/Desktop/OS/smash_HW1/build",
-  "command": "/usr/bin/g++   -g -o CMakeFiles/Smash.dir/signals.cpp.o -c /home/student/Desktop/OS/smash_HW1/signals.cpp",
-  "file": "/home/student/Desktop/OS/smash_HW1/signals.cpp"
+  "directory": "/home/student/Documents/OS/smash_HW1/build",
+  "command": "/usr/bin/g++   -g -o CMakeFiles/Smash.dir/signals.cpp.o -c /home/student/Documents/OS/smash_HW1/signals.cpp",
+  "file": "/home/student/Documents/OS/smash_HW1/signals.cpp"
 },
 {
-  "directory": "/home/student/Desktop/OS/smash_HW1/build",
-  "command": "/usr/bin/g++   -g -o CMakeFiles/Smash.dir/smash.cpp.o -c /home/student/Desktop/OS/smash_HW1/smash.cpp",
-  "file": "/home/student/Desktop/OS/smash_HW1/smash.cpp"
+  "directory": "/home/student/Documents/OS/smash_HW1/build",
+  "command": "/usr/bin/g++   -g -o CMakeFiles/Smash.dir/smash.cpp.o -c /home/student/Documents/OS/smash_HW1/smash.cpp",
+  "file": "/home/student/Documents/OS/smash_HW1/smash.cpp"
 }
 ]

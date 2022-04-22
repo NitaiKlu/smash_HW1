@@ -134,16 +134,18 @@ private:
   class JobEntry
   {
   private:
+    int job_id;
     string cmd_name;
     int process_id;
     time_t create_time;
     bool is_stopped;
 
   public:
-    JobEntry(Command *cmd, int process_id, bool is_stopped);
+    JobEntry(int job_id, Command *cmd, int process_id, bool is_stopped);
     ~JobEntry() = default;
     void printJobWithTime();
     int getProcessID();
+    int getJobId();
     void printAndDie();
     void printAlarm();
     void stopJob();
@@ -159,8 +161,9 @@ private:
 public:
   JobsList();
   ~JobsList() = default;
-  void addJob(Command *cmd, int process_id, bool isForeground = false,bool is_stopped = false);
+  void addJob(Command *cmd, int process_id, bool isForeground = false ,bool is_stopped = false);
   void addJob(JobEntry &job, bool isForeground = false);
+  void addJobFromZsignal(JobEntry &job);
   void printJobsList();
   void killAllJobs();
   void removeFinishedJobs();

@@ -1,8 +1,8 @@
 CMakeFiles/Smash.dir/Commands.cpp.o: \
- /home/student/Desktop/OS/smash_HW1/Commands.cpp \
- /usr/include/stdc-predef.h /home/student/Desktop/OS/smash_HW1/Commands.h \
- /usr/include/unistd.h /usr/include/features.h \
- /usr/include/x86_64-linux-gnu/sys/cdefs.h \
+ /home/student/Documents/OS/smash_HW1/Commands.cpp \
+ /usr/include/stdc-predef.h \
+ /home/student/Documents/OS/smash_HW1/Commands.h /usr/include/unistd.h \
+ /usr/include/features.h /usr/include/x86_64-linux-gnu/sys/cdefs.h \
  /usr/include/x86_64-linux-gnu/bits/wordsize.h \
  /usr/include/x86_64-linux-gnu/bits/long-double.h \
  /usr/include/x86_64-linux-gnu/gnu/stubs.h \

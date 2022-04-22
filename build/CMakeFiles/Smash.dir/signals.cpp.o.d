@@ -1,6 +1,7 @@
 CMakeFiles/Smash.dir/signals.cpp.o: \
- /home/student/Desktop/OS/smash_HW1/signals.cpp \
- /usr/include/stdc-predef.h /home/student/Desktop/OS/smash_HW1/signals.h \
+ /home/student/Documents/OS/smash_HW1/signals.cpp \
+ /usr/include/stdc-predef.h \
+ /home/student/Documents/OS/smash_HW1/signals.h \
  /usr/include/c++/7/iostream \
  /usr/include/x86_64-linux-gnu/c++/7/bits/c++config.h \
  /usr/include/x86_64-linux-gnu/c++/7/bits/os_defines.h \
@@ -151,7 +152,7 @@ CMakeFiles/Smash.dir/signals.cpp.o: \
  /usr/include/x86_64-linux-gnu/bits/ss_flags.h \
  /usr/include/x86_64-linux-gnu/bits/types/struct_sigstack.h \
  /usr/include/x86_64-linux-gnu/bits/sigthread.h \
- /home/student/Desktop/OS/smash_HW1/Commands.h /usr/include/unistd.h \
+ /home/student/Documents/OS/smash_HW1/Commands.h /usr/include/unistd.h \
  /usr/include/x86_64-linux-gnu/bits/posix_opt.h \
  /usr/include/x86_64-linux-gnu/bits/environments.h \
  /usr/include/x86_64-linux-gnu/bits/confname.h \

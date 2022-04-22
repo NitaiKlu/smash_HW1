@@ -4,8 +4,8 @@
 
 
 # Configuration directories and files
-SourceDirectory: /home/student/Desktop/OS/smash_HW1
-BuildDirectory: /home/student/Desktop/OS/smash_HW1/build
+SourceDirectory: /home/student/Documents/OS/smash_HW1
+BuildDirectory: /home/student/Documents/OS/smash_HW1/build
 
 # Where to place the cost data store
 CostDataFile: 
@@ -21,13 +21,14 @@ LabelsForSubprojects:
 
 # Submission information
 SubmitURL: http://
+SubmitInactivityTimeout: 
 
 # Dashboard start time
 NightlyStartTime: 00:00:00 EDT
 
 # Commands for the build/test/submit cycle
-ConfigureCommand: "/usr/bin/cmake" "/home/student/Desktop/OS/smash_HW1"
-MakeCommand: /usr/bin/cmake --build . --config "${CTEST_CONFIGURATION_TYPE}" -- -i
+ConfigureCommand: "/snap/cmake/1082/bin/cmake" "/home/student/Documents/OS/smash_HW1"
+MakeCommand: /snap/cmake/1082/bin/cmake --build . --config "${CTEST_CONFIGURATION_TYPE}" -- -i
 DefaultCTestConfigurationType: Release
 
 # version control
@@ -63,7 +64,7 @@ UpdateType: git
 
 # Compiler info
 Compiler: /usr/bin/g++
-CompilerVersion: 7.4.0
+CompilerVersion: 7.5.0
 
 # Dynamic analysis (MemCheck)
 PurifyCommand: 
