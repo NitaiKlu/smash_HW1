@@ -725,8 +725,7 @@ void SmallShell::executeCommand(const char *cmd_line)
       }
       else
       {
-        //why add this job? it runs in fg
-        //jobs.addJob(cmd, pid, true);
+        jobs.addJob(cmd, pid, true);
         runAtFront(pid);
       }
     }
