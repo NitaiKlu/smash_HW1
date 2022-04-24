@@ -9,6 +9,8 @@
 #include <sys/wait.h>
 #include <stdio.h>
 #include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 #include <iomanip>
 #include <time.h>
 #include <utime.h>
@@ -236,11 +238,48 @@ public:
   void execute() override;
 };
 
+class IOCommand : public BuiltInCommand
+{
+protected:
+  string destination = "";
+public:
+  IOCommand(const char *cmd_line);
+  virtual ~IOCommand() {}
+  void execute() override;
+};
+
+//command > file
+class RedirectFileCommand : public IOCommand
+{
+public:
+  RedirectFileCommand(const char *cmd_line);
+  virtual ~RedirectFileCommand() {}
+  void execute() override;
+};
+
+//command >> file
+class AppendFileCommand : public IOCommand
+{
+public:
+  AppendFileCommand(const char *cmd_line);
+  virtual ~AppendFileCommand() {}
+  void execute() override;
+};
+
+
 class TailCommand : public BuiltInCommand
 {
 public:
   TailCommand(const char *cmd_line);
   virtual ~TailCommand() {}
+  void execute() override;
+};
+
+class TimeOutCommand : public BuiltInCommand
+{
+public:
+  TimeOutCommand(const char *cmd_line);
+  virtual ~TimeOutCommand() {}
   void execute() override;
 };
 

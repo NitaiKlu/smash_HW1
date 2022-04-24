@@ -113,7 +113,10 @@ char **Command::getArgsArr()
   return argsArr;
 }
 
-//**************BuiltInCommand**********************
+//****************************************************
+//**************BuiltInCommand************************
+//****************************************************
+
 BuiltInCommand::BuiltInCommand(const char *cmd_line)
     : Command(cmd_line, BUILT_IN)
 {
@@ -479,8 +482,7 @@ pid_t JobsList::jobIdToBack(int JobId)
   map<int, JobEntry>::iterator it = jobs.find(JobId);
   if (jobs.empty() || it == jobs.end())
   {
-    cout << "smash error: bg: job-id <job-id> does not exist" << endl;
-
+    cout << "smash error: bg: job-id " << JobId <<" does not exist" << endl;
     return -1;
   }
   if (!it->second.isStopped())
@@ -620,7 +622,9 @@ void QuitCommand::execute()
   exit(0);
 }
 
-//**************ExternalCommand**********************
+//****************************************************
+//**************ExternalCommand***********************
+//****************************************************
 ExternalCommand::ExternalCommand(const char *cmd_line)
     : Command(cmd_line, 0)
 {
@@ -628,6 +632,60 @@ ExternalCommand::ExternalCommand(const char *cmd_line)
 
 void ExternalCommand::execute()
 {
+}
+
+//****************************************************
+//**************Special Commands**********************
+//****************************************************
+
+//**************IOCommand**********************
+IOCommand::IOCommand(const char *cmd_line) 
+  : BuiltInCommand(cmd_line)
+{
+}
+
+void IOCommand::execute() {}
+
+//**************RedirectFileCommand**********************
+RedirectFileCommand::RedirectFileCommand(const char *cmd_line) 
+  : IOCommand(cmd_line)
+{
+  int redirect_loc = args[0].find_first_of(">");
+  if(redirect_loc == std::string::npos) { //no '>' found
+    destination = ""; 
+  }
+  /**
+   * add validity check!
+   * */
+
+  destination = args[0].substr(redirect_loc + 1);
+}
+
+void RedirectFileCommand::execute()
+{
+  pid_t pid = fork();
+  if(pid == 0) { //son
+    close(1); //close your regular output dir
+    int FD = open(destination.c_str(), O_CREAT, O_WRONLY, "rw");
+    if( FD == -1) {
+      cout << "open error!" << endl;
+      return;
+    }
+    int redirect_loc = args[0].find_first_of(">");
+    SmallShell &smash = SmallShell::getInstance();
+    Command* cmd = smash.CreateCommand(args[0].substr(0, redirect_loc).c_str());
+    char **argsArr = cmd->getArgsArr();
+    setpgrp();
+    execv(argsArr[0], argsArr);
+    perror("execv failed");
+  }
+  else { //parent
+    int stat; 
+    if (waitpid(pid, &stat, WUNTRACED) < 0)
+    {
+      perror("wait failed");
+    }
+  }
 }
 
 //**************SmallShell**********************
@@ -654,6 +712,24 @@ bool isBuiltIn(string cmd, const string built_in)
     return true;
   }
   return false;
+}
+
+bool isRedirect(string cmd)
+{
+  int redirect_loc = cmd.find_first_of(">");
+  if(redirect_loc == std::string::npos) { //no '>' found
+    return false; 
+  }
+  return true;
+}
+
+bool isRedirectAppend(string cmd)
+{
+  int redirect_loc = cmd.find_first_of(">>");
+  if(redirect_loc == std::string::npos) { //no '>>' found
+    return false; 
+  }
+  return true;
 }
 
 Command *SmallShell::CreateCommand(const char *cmd_line)
@@ -697,6 +773,14 @@ Command *SmallShell::CreateCommand(const char *cmd_line)
   {
     return new BackgroundCommand(cmd_line, &jobs);
   }
+  /**else if (isRedirectAppend(cmd_s))
+  {
+    return new AppendFileCommand(cmd_line);
+  }*/
+  else if (isRedirect(cmd_s))
+  {
+    return new RedirectFileCommand(cmd_line);
+  }
   else
   {
     return new ExternalCommand(cmd_line);
@@ -708,6 +792,10 @@ void SmallShell::executeCommand(const char *cmd_line)
   Command *cmd = CreateCommand(cmd_line);
   jobs.removeFinishedJobs();
   if (dynamic_cast<ExternalCommand *>(cmd) == nullptr) // Built-in Command
+  {
+    cmd->execute();
+  }
+  else if (dynamic_cast<IOCommand *>(cmd) == nullptr) // IO Command
   {
     cmd->execute();
   }
