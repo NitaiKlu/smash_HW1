@@ -8,8 +8,8 @@ void ctrlZHandler(int sig_num)
   SmallShell &smash = SmallShell::getInstance();
   if (!smash.isForeground()) return;
   pid_t pid = smash.getForegroundPid();
-  smash.stopForeground();
   kill(pid, SIGTSTP);
+  smash.stopForeground();
   cout << "smash: process "<< pid <<" was stopped" << endl;
 }
 

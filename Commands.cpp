@@ -293,14 +293,13 @@ void JobsList::addJob(JobEntry &job, bool isForeground)
   }
 }
 
-//this func is in use iff the job to be added is stopped by ^z ==> the job entry already has a job-id  
+//this func is in use iff the job to be added is stopped by ^z 
 void JobsList::addJobFromZsignal(JobEntry &job)
 {
-  job.stopJob();
-  if(job.getJobId() == 0) {
+  if(job.getJobId() == 0) { //this was never in jobsList
     jobs.insert(pair<int, JobEntry>(++max_id, job));
   }
-  else {
+  else { //this was already in jobsList. no need to give new job id
     jobs.insert(pair<int, JobEntry>(job.getJobId(), job));  
   }
 }
