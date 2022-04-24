@@ -141,7 +141,7 @@ private:
     bool is_stopped;
 
   public:
-    JobEntry(int job_id, Command *cmd, int process_id, bool is_stopped);
+    JobEntry(Command *cmd, int process_id, bool is_stopped,int job_id = 0);
     ~JobEntry() = default;
     void printJobWithTime();
     int getProcessID();

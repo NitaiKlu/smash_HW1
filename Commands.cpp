@@ -200,7 +200,7 @@ void GetCurrDirCommand::execute()
 }
 
 //**************JobEntry**********************
-JobsList::JobEntry::JobEntry(int job_id, Command *cmd, int process_id, bool is_stopped)
+JobsList::JobEntry::JobEntry(Command *cmd, int process_id, bool is_stopped, int job_id)
     : job_id(job_id), process_id(process_id), is_stopped(is_stopped)
 {
   cmd_name = cmd->getCmdStr();
@@ -276,7 +276,7 @@ void JobsList::printJobsList()
 void JobsList::addJob(Command *cmd, int process_id, bool isForeground, bool is_stopped)
 {
   removeFinishedJobs();
-  JobsList::JobEntry job(max_id + 1, cmd, process_id, is_stopped);
+  JobsList::JobEntry job(cmd, process_id, is_stopped, max_id + 1);
   addJob(job, isForeground);  
 }
 
