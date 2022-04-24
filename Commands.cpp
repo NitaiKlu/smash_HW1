@@ -201,7 +201,7 @@ void GetCurrDirCommand::execute()
 
 //**************JobEntry**********************
 JobsList::JobEntry::JobEntry(int job_id, Command *cmd, int process_id, bool is_stopped)
-    : process_id(process_id), is_stopped(is_stopped)
+    : job_id(job_id), process_id(process_id), is_stopped(is_stopped)
 {
   cmd_name = cmd->getCmdStr();
   time(&create_time);
@@ -296,9 +296,13 @@ void JobsList::addJob(JobEntry &job, bool isForeground)
 //this func is in use iff the job to be added is stopped by ^z ==> the job entry already has a job-id  
 void JobsList::addJobFromZsignal(JobEntry &job)
 {
-  removeFinishedJobs();
   job.stopJob();
-  jobs.insert(pair<int, JobEntry>(job.getJobId(), job));  
+  if(job.getJobId() == 0) {
+    jobs.insert(pair<int, JobEntry>(++max_id, job));
+  }
+  else {
+    jobs.insert(pair<int, JobEntry>(job.getJobId(), job));  
+  }
 }
 
 void JobsList::killAllJobs()
@@ -350,6 +354,11 @@ void JobsList::removeJobById(int jobId)
   {
     max_id = (jobs.empty()) ? 0 : jobs.rbegin()->first;
   }
+}
+
+JobsList::JobEntry &JobsList::getFgJob()
+{
+  return this->foregroundJob.top();
 }
 
 JobsList::JobEntry *JobsList::getJobById(int jobId)
@@ -414,7 +423,7 @@ pid_t JobsList::getForegroundPid()
 }
 void JobsList::stopForeground()
 {
-  JobsList::JobEntry job = foregroundJob.top();
+  JobsList::JobEntry& job = foregroundJob.top();
   foregroundJob.pop();
   job.stopJob();
   addJobFromZsignal(job);
@@ -726,7 +735,7 @@ void SmallShell::executeCommand(const char *cmd_line)
       else
       {
         jobs.addJob(cmd, pid, true);
-        runAtFront(pid);
+        runAtFront(pid, cmd);
       }
     }
   }
@@ -772,6 +781,30 @@ void SmallShell::stopForeground()
 {
   jobs.stopForeground();
 }
+void SmallShell::runAtFront(pid_t pid, Command* cmd)
+{
+  int stat;
+  if (waitpid(pid, &stat, WUNTRACED) < 0)
+  {
+    perror("wait failed");
+  }
+  else
+  {
+    if (WIFEXITED(stat)) // child terminated normally
+    {
+      jobs.killForegroundJob();
+    }
+    else if (WIFSIGNALED(stat)) // child terminated by a signal
+    {
+      int sig = WTERMSIG(stat);
+      if (sig == SIGTSTP)
+      {
+        jobs.addJob(cmd, pid, false, true);
+      }
+    }
+  }
+}
+
 void SmallShell::runAtFront(pid_t pid)
 {
   int stat;
@@ -790,13 +823,12 @@ void SmallShell::runAtFront(pid_t pid)
       int sig = WTERMSIG(stat);
       if (sig == SIGTSTP)
       {
-      }
-      else if (sig == SIGINT)
-      {
+        jobs.addJobFromZsignal(jobs.getFgJob());
       }
     }
   }
 }
+
 void SmallShell::AlarmHandle()
 {
   jobs.AlarmCheck();

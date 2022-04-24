@@ -168,6 +168,7 @@ public:
   void killAllJobs();
   void removeFinishedJobs();
   JobEntry *getJobById(int jobId);
+  JobEntry &getFgJob();
   void removeJobById(int jobId);
   JobEntry *getLastJob(int *lastJobId);
   JobEntry *getLastStoppedJob(int *jobId);
@@ -282,6 +283,7 @@ public:
   pid_t getForegroundPid();
   void stopForeground();
   void runAtFront(pid_t pid);
+  void runAtFront(pid_t pid, Command* cmd);
   void AlarmHandle();
 };
 
