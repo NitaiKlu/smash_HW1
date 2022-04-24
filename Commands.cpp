@@ -158,7 +158,7 @@ void ChangeDirCommand::execute()
 {
   SmallShell &smash = SmallShell::getInstance();
   char path[COMMAND_ARGS_MAX_LENGTH];
-  if (args.size() > 2)
+  if (args.size() != 2)
   {
     cout << "smash error: cd: too many arguments" << endl;
     return;
