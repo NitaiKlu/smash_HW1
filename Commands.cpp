@@ -448,7 +448,7 @@ pid_t JobsList::jobIdToFront(int JobId)
 {
   if (jobs.empty() || jobs.find(JobId) == jobs.end())
   {
-    cout << "smash error: fg: job-id <job-id> does not exist" << endl;
+    cout << "smash error: fg: job-id "<< JobId <<" does not exist" << endl;
     return -1;
   }
   JobsList::JobEntry job = jobs.find(JobId)->second;
@@ -651,11 +651,11 @@ RedirectFileCommand::RedirectFileCommand(const char *cmd_line)
   : IOCommand(cmd_line)
 {
   int redirect_loc = args[0].find_first_of(">");
-  if(redirect_loc == std::string::npos) { //no '>' found
-    destination = ""; 
+  if(redirect_loc == std::string::npos) { //no '>' found, illegal
+    destination = "*"; 
   }
   /**
-   * add validity check!
+   * add destination and args check!
    * */
 
   destination = args[0].substr(redirect_loc + 1);
@@ -663,25 +663,25 @@ RedirectFileCommand::RedirectFileCommand(const char *cmd_line)
 
 void RedirectFileCommand::execute()
 {
+  /**if(destination.compare("*") == 0) { //illegal command
+    cout << "smash error: > invalid arguments" << endl;
+    return;
+  }**/
   pid_t pid = fork();
   if(pid == 0) { //son
-    close(1); //close your regular output dir
-    int FD = open(destination.c_str(), O_CREAT, O_WRONLY, "rw");
-    if( FD == -1) {
-      cout << "open error!" << endl;
-      return;
-    }
+    close(1); //close the standard output 
+    FILE* fp = freopen(destination.c_str(), "w", stdout);
     int redirect_loc = args[0].find_first_of(">");
     SmallShell &smash = SmallShell::getInstance();
     Command* cmd = smash.CreateCommand(args[0].substr(0, redirect_loc).c_str());
     char **argsArr = cmd->getArgsArr();
     setpgrp();
     execv(argsArr[0], argsArr);
-    perror("execv failed");
+    fclose(fp);
   }
   else { //parent
     int stat; 
-    if (waitpid(pid, &stat, WUNTRACED) < 0)
+    if (waitpid(pid, &stat,WUNTRACED) < 0)
     {
       perror("wait failed");
     }
@@ -795,7 +795,7 @@ void SmallShell::executeCommand(const char *cmd_line)
   {
     cmd->execute();
   }
-  else if (dynamic_cast<IOCommand *>(cmd) == nullptr) // IO Command
+  else if (dynamic_cast<IOCommand *>(cmd) != nullptr) // IO Command
   {
     cmd->execute();
   }
