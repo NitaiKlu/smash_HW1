@@ -1,6 +1,6 @@
 CMakeFiles/Smash.dir/smash.cpp.o: \
- /home/student/Documents/OS/smash_HW1/smash.cpp \
- /usr/include/stdc-predef.h /usr/include/c++/7/iostream \
+ /home/student/Desktop/OS/smash_HW1/smash.cpp /usr/include/stdc-predef.h \
+ /usr/include/c++/7/iostream \
  /usr/include/x86_64-linux-gnu/c++/7/bits/c++config.h \
  /usr/include/x86_64-linux-gnu/c++/7/bits/os_defines.h \
  /usr/include/features.h /usr/include/x86_64-linux-gnu/sys/cdefs.h \
@@ -156,15 +156,21 @@ CMakeFiles/Smash.dir/smash.cpp.o: \
  /usr/include/x86_64-linux-gnu/bits/ss_flags.h \
  /usr/include/x86_64-linux-gnu/bits/types/struct_sigstack.h \
  /usr/include/x86_64-linux-gnu/bits/sigthread.h \
- /home/student/Documents/OS/smash_HW1/Commands.h /usr/include/string.h \
+ /home/student/Desktop/OS/smash_HW1/Commands.h /usr/include/string.h \
  /usr/include/strings.h /usr/include/c++/7/vector \
  /usr/include/c++/7/bits/stl_construct.h \
  /usr/include/c++/7/bits/stl_uninitialized.h \
  /usr/include/c++/7/bits/stl_vector.h \
  /usr/include/c++/7/bits/stl_bvector.h /usr/include/c++/7/bits/vector.tcc \
  /usr/include/c++/7/sstream /usr/include/c++/7/bits/sstream.tcc \
- /usr/include/c++/7/iomanip /usr/include/c++/7/locale \
- /usr/include/c++/7/bits/locale_facets_nonio.h /usr/include/c++/7/ctime \
+ /usr/include/x86_64-linux-gnu/sys/stat.h \
+ /usr/include/x86_64-linux-gnu/bits/stat.h /usr/include/fcntl.h \
+ /usr/include/x86_64-linux-gnu/bits/fcntl.h \
+ /usr/include/x86_64-linux-gnu/bits/fcntl-linux.h \
+ /usr/include/x86_64-linux-gnu/bits/types/struct_iovec.h \
+ /usr/include/linux/falloc.h /usr/include/c++/7/iomanip \
+ /usr/include/c++/7/locale /usr/include/c++/7/bits/locale_facets_nonio.h \
+ /usr/include/c++/7/ctime \
  /usr/include/x86_64-linux-gnu/c++/7/bits/time_members.h \
  /usr/include/x86_64-linux-gnu/c++/7/bits/messages_members.h \
  /usr/include/libintl.h /usr/include/c++/7/bits/codecvt.h \
@@ -182,4 +188,4 @@ CMakeFiles/Smash.dir/smash.cpp.o: \
  /usr/include/c++/7/bits/stl_tree.h \
  /usr/include/c++/7/ext/aligned_buffer.h \
  /usr/include/c++/7/bits/stl_map.h /usr/include/c++/7/bits/stl_multimap.h \
- /home/student/Documents/OS/smash_HW1/signals.h
+ /home/student/Desktop/OS/smash_HW1/signals.h

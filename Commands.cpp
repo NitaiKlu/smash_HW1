@@ -280,7 +280,7 @@ void JobsList::addJob(Command *cmd, int process_id, bool isForeground, bool is_s
 {
   removeFinishedJobs();
   JobsList::JobEntry job(cmd, process_id, is_stopped, max_id + 1);
-  addJob(job, isForeground);  
+  addJob(job, isForeground);
 }
 
 void JobsList::addJob(JobEntry &job, bool isForeground)
@@ -296,14 +296,16 @@ void JobsList::addJob(JobEntry &job, bool isForeground)
   }
 }
 
-//this func is in use iff the job to be added is stopped by ^z 
+// this func is in use iff the job to be added is stopped by ^z
 void JobsList::addJobFromZsignal(JobEntry &job)
 {
-  if(job.getJobId() == 0) { //this was never in jobsList
+  if (job.getJobId() == 0)
+  { // this was never in jobsList
     jobs.insert(pair<int, JobEntry>(++max_id, job));
   }
-  else { //this was already in jobsList. no need to give new job id
-    jobs.insert(pair<int, JobEntry>(job.getJobId(), job));  
+  else
+  { // this was already in jobsList. no need to give new job id
+    jobs.insert(pair<int, JobEntry>(job.getJobId(), job));
   }
 }
 
@@ -425,7 +427,7 @@ pid_t JobsList::getForegroundPid()
 }
 void JobsList::stopForeground()
 {
-  JobsList::JobEntry& job = foregroundJob.top();
+  JobsList::JobEntry &job = foregroundJob.top();
   foregroundJob.pop();
   job.stopJob();
   addJobFromZsignal(job);
@@ -448,7 +450,7 @@ pid_t JobsList::jobIdToFront(int JobId)
 {
   if (jobs.empty() || jobs.find(JobId) == jobs.end())
   {
-    cout << "smash error: fg: job-id "<< JobId <<" does not exist" << endl;
+    cout << "smash error: fg: job-id " << JobId << " does not exist" << endl;
     return -1;
   }
   JobsList::JobEntry job = jobs.find(JobId)->second;
@@ -482,7 +484,7 @@ pid_t JobsList::jobIdToBack(int JobId)
   map<int, JobEntry>::iterator it = jobs.find(JobId);
   if (jobs.empty() || it == jobs.end())
   {
-    cout << "smash error: bg: job-id " << JobId <<" does not exist" << endl;
+    cout << "smash error: bg: job-id " << JobId << " does not exist" << endl;
     return -1;
   }
   if (!it->second.isStopped())
@@ -582,7 +584,8 @@ void ForegroundCommand::execute()
   }
   pid_t pid = jobSpecified ? jobs_ptr->jobIdToFront(stoi(args[1])) : jobs_ptr->lastToFront();
   SmallShell &smash = SmallShell::getInstance();
-  if(pid == -1) {
+  if (pid == -1)
+  {
     return;
   }
   kill(pid, SIGCONT);
@@ -639,20 +642,21 @@ void ExternalCommand::execute()
 //****************************************************
 
 //**************IOCommand**********************
-IOCommand::IOCommand(const char *cmd_line) 
-  : BuiltInCommand(cmd_line)
+IOCommand::IOCommand(const char *cmd_line)
+    : BuiltInCommand(cmd_line)
 {
 }
 
 void IOCommand::execute() {}
 
 //**************RedirectFileCommand**********************
-RedirectFileCommand::RedirectFileCommand(const char *cmd_line) 
-  : IOCommand(cmd_line)
+RedirectFileCommand::RedirectFileCommand(const char *cmd_line)
+    : IOCommand(cmd_line)
 {
   int redirect_loc = args[0].find_first_of(">");
-  if(redirect_loc == std::string::npos) { //no '>' found, illegal
-    destination = "*"; 
+  if (redirect_loc == std::string::npos)
+  { // no '>' found, illegal
+    destination = "*";
   }
   /**
    * add destination and args check!
@@ -668,24 +672,82 @@ void RedirectFileCommand::execute()
     return;
   }**/
   pid_t pid = fork();
-  if(pid == 0) { //son
-    close(1); //close the standard output 
-    FILE* fp = freopen(destination.c_str(), "w", stdout);
+  if (pid == 0)
+  {           // son
+    close(1); // close the standard output
+    FILE *fp = freopen(destination.c_str(), "w", stdout);
     int redirect_loc = args[0].find_first_of(">");
     SmallShell &smash = SmallShell::getInstance();
-    Command* cmd = smash.CreateCommand(args[0].substr(0, redirect_loc).c_str());
+    Command *cmd = smash.CreateCommand(args[0].substr(0, redirect_loc).c_str());
     char **argsArr = cmd->getArgsArr();
     setpgrp();
     execv(argsArr[0], argsArr);
     fclose(fp);
   }
-  else { //parent
-    int stat; 
-    if (waitpid(pid, &stat,WUNTRACED) < 0)
+  else
+  { // parent
+    int stat;
+    if (waitpid(pid, &stat, WUNTRACED) < 0)
     {
       perror("wait failed");
     }
   }
+}
+
+//**************TailCommand**********************
+TailCommand::TailCommand(const char *cmd_line)
+    : BuiltInCommand(cmd_line), n(10) {}
+
+void TailCommand::execute()
+{
+  if (args.size() > 3 || (args.size() == 3 && !is_number(args[1])))
+  {
+    perror("smash error: tail: invalid arguments");
+    return;
+  }
+  // if there are 3 parameters- the second is N
+  if (args.size() == 3)
+  {
+    n = std::stoi(args[1]);
+  }
+  // the last parameter is the path
+  const char *path = args.back().c_str();
+
+  char buf;
+  int fd = open(path, O_RDONLY);
+  lseek(fd, -1, SEEK_END); // seek pointer at the last char
+  int i = 0;               // number of "\n" read from EOF
+
+  /* Reading one char at a time from the end of the file,
+  until n 'new-line's were read (going BACKWARDS).
+  By doing so- the seek pointer is set. */
+  while (read(fd, &buf, 1) == 1) 
+  {
+    if (buf == '\n')
+    {
+      i++;
+      if (i == n)
+      {
+        break;
+      }
+    }
+    if (lseek(fd, -2, SEEK_CUR) < 0)
+    {
+      break;
+    }
+  }
+   
+  lseek(fd, -1, SEEK_CUR);
+
+  while (read(fd, &buf, 1) == 1) // writing to stdout
+  {
+    if (write(1,&buf,1) != 1)
+    {
+      break;
+    }
+  }
+
+  close(fd);
 }
 
 //**************SmallShell**********************
@@ -717,8 +779,9 @@ bool isBuiltIn(string cmd, const string built_in)
 bool isRedirect(string cmd)
 {
   int redirect_loc = cmd.find_first_of(">");
-  if(redirect_loc == std::string::npos) { //no '>' found
-    return false; 
+  if (redirect_loc == std::string::npos)
+  { // no '>' found
+    return false;
   }
   return true;
 }
@@ -726,8 +789,9 @@ bool isRedirect(string cmd)
 bool isRedirectAppend(string cmd)
 {
   int redirect_loc = cmd.find_first_of(">>");
-  if(redirect_loc == std::string::npos) { //no '>>' found
-    return false; 
+  if (redirect_loc == std::string::npos)
+  { // no '>>' found
+    return false;
   }
   return true;
 }
@@ -780,6 +844,10 @@ Command *SmallShell::CreateCommand(const char *cmd_line)
   else if (isRedirect(cmd_s))
   {
     return new RedirectFileCommand(cmd_line);
+  }
+  else if (isBuiltIn(firstWord, "tail"))
+  {
+    return new TailCommand(cmd_line);
   }
   else
   {
@@ -868,7 +936,7 @@ void SmallShell::stopForeground()
 {
   jobs.stopForeground();
 }
-void SmallShell::runAtFront(pid_t pid, Command* cmd)
+void SmallShell::runAtFront(pid_t pid, Command *cmd)
 {
   int stat;
   if (waitpid(pid, &stat, WUNTRACED) < 0)

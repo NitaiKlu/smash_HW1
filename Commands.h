@@ -269,6 +269,7 @@ public:
 
 class TailCommand : public BuiltInCommand
 {
+  int n;
 public:
   TailCommand(const char *cmd_line);
   virtual ~TailCommand() {}

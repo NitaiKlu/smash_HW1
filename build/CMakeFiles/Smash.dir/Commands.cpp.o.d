@@ -1,8 +1,8 @@
 CMakeFiles/Smash.dir/Commands.cpp.o: \
- /home/student/Documents/OS/smash_HW1/Commands.cpp \
- /usr/include/stdc-predef.h \
- /home/student/Documents/OS/smash_HW1/Commands.h /usr/include/unistd.h \
- /usr/include/features.h /usr/include/x86_64-linux-gnu/sys/cdefs.h \
+ /home/student/Desktop/OS/smash_HW1/Commands.cpp \
+ /usr/include/stdc-predef.h /home/student/Desktop/OS/smash_HW1/Commands.h \
+ /usr/include/unistd.h /usr/include/features.h \
+ /usr/include/x86_64-linux-gnu/sys/cdefs.h \
  /usr/include/x86_64-linux-gnu/bits/wordsize.h \
  /usr/include/x86_64-linux-gnu/bits/long-double.h \
  /usr/include/x86_64-linux-gnu/gnu/stubs.h \
@@ -163,8 +163,14 @@ CMakeFiles/Smash.dir/Commands.cpp.o: \
  /usr/include/x86_64-linux-gnu/bits/ss_flags.h \
  /usr/include/x86_64-linux-gnu/bits/types/struct_sigstack.h \
  /usr/include/x86_64-linux-gnu/bits/sigthread.h \
- /usr/include/c++/7/iomanip /usr/include/c++/7/locale \
- /usr/include/c++/7/bits/locale_facets_nonio.h /usr/include/c++/7/ctime \
+ /usr/include/x86_64-linux-gnu/sys/stat.h \
+ /usr/include/x86_64-linux-gnu/bits/stat.h /usr/include/fcntl.h \
+ /usr/include/x86_64-linux-gnu/bits/fcntl.h \
+ /usr/include/x86_64-linux-gnu/bits/fcntl-linux.h \
+ /usr/include/x86_64-linux-gnu/bits/types/struct_iovec.h \
+ /usr/include/linux/falloc.h /usr/include/c++/7/iomanip \
+ /usr/include/c++/7/locale /usr/include/c++/7/bits/locale_facets_nonio.h \
+ /usr/include/c++/7/ctime \
  /usr/include/x86_64-linux-gnu/c++/7/bits/time_members.h \
  /usr/include/x86_64-linux-gnu/c++/7/bits/messages_members.h \
  /usr/include/libintl.h /usr/include/c++/7/bits/codecvt.h \

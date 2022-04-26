@@ -1,7 +1,6 @@
 CMakeFiles/Smash.dir/signals.cpp.o: \
- /home/student/Documents/OS/smash_HW1/signals.cpp \
- /usr/include/stdc-predef.h \
- /home/student/Documents/OS/smash_HW1/signals.h \
+ /home/student/Desktop/OS/smash_HW1/signals.cpp \
+ /usr/include/stdc-predef.h /home/student/Desktop/OS/smash_HW1/signals.h \
  /usr/include/c++/7/iostream \
  /usr/include/x86_64-linux-gnu/c++/7/bits/c++config.h \
  /usr/include/x86_64-linux-gnu/c++/7/bits/os_defines.h \
@@ -152,7 +151,7 @@ CMakeFiles/Smash.dir/signals.cpp.o: \
  /usr/include/x86_64-linux-gnu/bits/ss_flags.h \
  /usr/include/x86_64-linux-gnu/bits/types/struct_sigstack.h \
  /usr/include/x86_64-linux-gnu/bits/sigthread.h \
- /home/student/Documents/OS/smash_HW1/Commands.h /usr/include/unistd.h \
+ /home/student/Desktop/OS/smash_HW1/Commands.h /usr/include/unistd.h \
  /usr/include/x86_64-linux-gnu/bits/posix_opt.h \
  /usr/include/x86_64-linux-gnu/bits/environments.h \
  /usr/include/x86_64-linux-gnu/bits/confname.h \
@@ -164,7 +163,13 @@ CMakeFiles/Smash.dir/signals.cpp.o: \
  /usr/include/c++/7/bits/stl_vector.h \
  /usr/include/c++/7/bits/stl_bvector.h /usr/include/c++/7/bits/vector.tcc \
  /usr/include/c++/7/sstream /usr/include/c++/7/bits/sstream.tcc \
- /usr/include/x86_64-linux-gnu/sys/wait.h /usr/include/c++/7/iomanip \
+ /usr/include/x86_64-linux-gnu/sys/wait.h \
+ /usr/include/x86_64-linux-gnu/sys/stat.h \
+ /usr/include/x86_64-linux-gnu/bits/stat.h /usr/include/fcntl.h \
+ /usr/include/x86_64-linux-gnu/bits/fcntl.h \
+ /usr/include/x86_64-linux-gnu/bits/fcntl-linux.h \
+ /usr/include/x86_64-linux-gnu/bits/types/struct_iovec.h \
+ /usr/include/linux/falloc.h /usr/include/c++/7/iomanip \
  /usr/include/c++/7/locale /usr/include/c++/7/bits/locale_facets_nonio.h \
  /usr/include/c++/7/ctime \
  /usr/include/x86_64-linux-gnu/c++/7/bits/time_members.h \
