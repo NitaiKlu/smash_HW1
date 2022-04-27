@@ -757,6 +757,133 @@ void AppendFileCommand::execute()
   }
 }
 
+//**************PipeCommand**********************
+PipeCommand::PipeCommand(const char *cmd_line)
+    : IOCommand(cmd_line)
+{}
+void PipeCommand::execute() 
+{
+  if (destination.compare("") == 0)
+  { // illegal command
+    cout << "smash error: > invalid arguments" << endl;
+    return;
+  }
+    /**
+   * my_pipe[0] = FD to read from pipe
+   * my_pipe[1] = FD to write to pipe
+   * */
+  pipe(my_pipe); 
+  SmallShell &smash = SmallShell::getInstance();
+  Command *cmd = smash.CreateCommand(source.c_str());
+  Command *after = smash.CreateCommand(destination.c_str());
+  pid_t pid = fork();
+  if(pid == 0)
+  {
+    close(my_pipe[0]); //son can't read from pipe
+    close(1);
+    dup(my_pipe[1]); //now entry 1 in FDT is my_pipe[0]
+    if (dynamic_cast<ExternalCommand *>(cmd) == nullptr)// Built in Command
+    {
+      cmd->execute();
+      exit(0);
+    }
+    char **argsArr = cmd->getArgsArr();
+    setpgrp();
+    execv(argsArr[0], argsArr);
+  }
+  else {
+    close(my_pipe[1]); //parent can't write to pipe
+    int in_copy = dup(0);
+    close(0);
+    dup(my_pipe[0]); //now entry 0 in FDT is my_pipe[0]
+    int stat;
+    if (waitpid(pid, &stat, WUNTRACED) < 0)
+    {
+      perror("wait failed");
+    }
+    char **argsArr = after->getArgsArr(); //now we run the after command
+    pid_t pid = fork();
+    if(pid == 0) //child
+    {
+      execv(argsArr[0], argsArr);
+    }
+    else { //parent closing things up
+      close(0);
+      dup(in_copy);
+      close(in_copy);
+      close(my_pipe[0]);
+    }
+
+    
+  }
+
+}
+
+
+//**************PipeErrorCommand**********************
+PipeErrorCommand::PipeErrorCommand(const char *cmd_line)
+    : IOCommand(cmd_line)
+{}
+void PipeErrorCommand::execute() 
+{
+  if (destination.compare("") == 0)
+  { // illegal command
+    cout << "smash error: > invalid arguments" << endl;
+    return;
+  }
+    /**
+   * my_pipe[0] = FD to read from pipe
+   * my_pipe[1] = FD to write to pipe
+   * */
+  pipe(my_pipe); 
+  SmallShell &smash = SmallShell::getInstance();
+  Command *cmd = smash.CreateCommand(source.c_str());
+  Command *after = smash.CreateCommand(destination.c_str());
+  pid_t pid = fork();
+  if(pid == 0)
+  {
+    close(my_pipe[0]); //son can't read from pipe
+    close(1);
+    dup(my_pipe[1]); //now entry 1 in FDT is my_pipe[0]
+    if (dynamic_cast<ExternalCommand *>(cmd) == nullptr)// Built in Command
+    {
+      cmd->execute();
+      exit(0);
+    }
+    char **argsArr = cmd->getArgsArr();
+    setpgrp();
+    execv(argsArr[0], argsArr);
+  }
+  else {
+    close(my_pipe[1]); //parent can't write to pipe
+    int in_copy = dup(2);
+    close(2);
+    dup(my_pipe[0]); //now entry 0 in FDT is my_pipe[0]
+    int stat;
+    if (waitpid(pid, &stat, WUNTRACED) < 0)
+    {
+      perror("wait failed");
+    }
+    char **argsArr = after->getArgsArr(); //now we run the after command
+    pid_t pid = fork();
+    if(pid == 0) //child
+    {
+      execv(argsArr[0], argsArr);
+    }
+    else { //parent closing things up
+      close(2);
+      dup(in_copy);
+      close(in_copy);
+      close(my_pipe[2]);
+    }
+
+    
+  }
+
+}
+
+
+
 //**************SmallShell**********************
 SmallShell::SmallShell()
     : prompt("smash")
@@ -793,6 +920,27 @@ bool isRedirect(string cmd)
   return true;
 }
 
+bool isPipe(string cmd)
+{
+  int pipe_loc = cmd.find(" | ");
+  if (pipe_loc == std::string::npos)
+  { // no '|' found
+    return false;
+  }
+  return true;
+}
+
+bool isPipeError(string cmd)
+{
+  int pipe_loc = cmd.find(" |& ");
+  if (pipe_loc == std::string::npos)
+  { // no '|' found
+    return false;
+  }
+  return true;
+}
+
+
 bool isRedirectAppend(string cmd)
 {
   int redirect_loc = cmd.find(" >> ");
@@ -807,7 +955,15 @@ Command *SmallShell::CreateCommand(const char *cmd_line)
 {
   string cmd_s = _trim(string(cmd_line));
   string firstWord = cmd_s.substr(0, cmd_s.find_first_of(" \n"));
-  if (isRedirectAppend(cmd_s))
+  if (isPipe(cmd_s))
+  {
+    return new PipeCommand(cmd_line);
+  }
+  /**else if (isPipeError(cmd_s))
+  {
+    return new PipeCommand(cmd_line);
+  }**/
+  else if (isRedirectAppend(cmd_s))
   {
     return new AppendFileCommand(cmd_line);
   }
