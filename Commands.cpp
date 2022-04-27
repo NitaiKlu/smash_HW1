@@ -645,6 +645,28 @@ void ExternalCommand::execute()
 IOCommand::IOCommand(const char *cmd_line)
     : BuiltInCommand(cmd_line)
 {
+  string cmd = "", target = "";
+  bool isTarget = false;
+  for (int i = 0; i < args.size(); i++)
+  {
+    if (args[i].find(">") != std::string::npos || args[i].find(">>") != std::string::npos ||
+        args[i].find("|") != std::string::npos || args[i].find("|&") != std::string::npos)
+    {
+      isTarget = true;
+      continue;
+    }
+    if (!isTarget) // still writing the command ______ >
+    {
+      cmd.append(args[i]);
+      cmd.append(" ");
+    }
+    else // we now take the target  >  _______
+    {
+      target.append(args[i]);
+    }
+  }
+  destination = target;
+  source = cmd;
 }
 
 void IOCommand::execute() {}
@@ -653,52 +675,27 @@ void IOCommand::execute() {}
 RedirectFileCommand::RedirectFileCommand(const char *cmd_line)
     : IOCommand(cmd_line)
 {
-  string source, target;
-  bool isTarget = false;
-  for (int i = 0; i < args.size(); i++)
-  {
-    if (args[i].find(">") != std::string::npos)
-    {
-      isTarget = true;
-      continue;
-    }
-    if (!isTarget) //still writing the command ______ > 
-    {
-      source.append(args[i]);
-      source.append(" ");
-    }
-    else //we now take the target  >  _______
-    {
-      target.append(args[i]);
-      break;
-    }
-  }
-  destination = target;
-  args[0] = source;
-  args[2] = target;
 }
-
-
 
 void RedirectFileCommand::execute()
 {
-  if (destination.compare("*") == 0)
+  if (destination.compare("") == 0)
   { // illegal command
     cout << "smash error: > invalid arguments" << endl;
     return;
   }
   pid_t pid = fork();
   SmallShell &smash = SmallShell::getInstance();
-  Command *cmd = smash.CreateCommand(args[0].c_str());
+  Command *cmd = smash.CreateCommand(source.c_str());
   if (pid == 0)
-  {           // son
-    close(1); // close the standard output
-    int fp = open(destination.c_str(), O_CREAT | O_WRONLY);
-    if (dynamic_cast<ExternalCommand *>(cmd) == nullptr) // Built in Command
+  {                                                                   // son
+    close(1);                                                         // close the standard output
+    int fp = open(destination.c_str(), O_CREAT | O_TRUNC | O_WRONLY); // create a file if needed | delete its content first | write only
+    if (dynamic_cast<ExternalCommand *>(cmd) == nullptr)              // Built in Command
     {
       cmd->execute();
       close(fp);
-      return;
+      exit(0);
     }
     char **argsArr = cmd->getArgsArr();
     setpgrp();
@@ -709,6 +706,51 @@ void RedirectFileCommand::execute()
   { // parent
     int stat;
     if (waitpid(pid, &stat, WUNTRACED) < 0)
+    {
+      perror("wait failed");
+    }
+  }
+}
+
+//**************RedirectFileCommand**********************
+AppendFileCommand::AppendFileCommand(const char *cmd_line)
+    : IOCommand(cmd_line)
+{
+}
+
+void AppendFileCommand::execute()
+{
+  if (destination.compare("") == 0)
+  { // illegal command
+    cout << "smash error: > invalid arguments" << endl;
+    return;
+  }
+  pid_t pid = fork();
+  SmallShell &smash = SmallShell::getInstance();
+  Command *cmd = smash.CreateCommand(source.c_str());
+  if (pid == 0)
+  {                                                          // son
+    close(1);                                                // close the standard output
+    int fp = open(destination.c_str(), O_WRONLY | O_APPEND); // write only | append mode
+    if (fp == -1)                                            // there is no such file
+    {
+      fp = open(destination.c_str(), O_CREAT | O_WRONLY); // delete its content first | write only | append mode
+    }
+    if (dynamic_cast<ExternalCommand *>(cmd) == nullptr) // Built in Command
+    {
+      cmd->execute();
+      close(fp);
+      exit(0);
+    }
+    char **argsArr = cmd->getArgsArr();
+    // setpgrp();
+    execv(argsArr[0], argsArr);
+    close(fp);
+  }
+  else
+  { // parent
+    int stat;
+    if (waitpid(pid, &stat, 0) < 0)
     {
       perror("wait failed");
     }
@@ -743,7 +785,7 @@ bool isBuiltIn(string cmd, const string built_in)
 
 bool isRedirect(string cmd)
 {
-  int redirect_loc = cmd.find_first_of(">");
+  int redirect_loc = cmd.find(" > ");
   if (redirect_loc == std::string::npos)
   { // no '>' found
     return false;
@@ -753,7 +795,7 @@ bool isRedirect(string cmd)
 
 bool isRedirectAppend(string cmd)
 {
-  int redirect_loc = cmd.find_first_of(">>");
+  int redirect_loc = cmd.find(" >> ");
   if (redirect_loc == std::string::npos)
   { // no '>>' found
     return false;
@@ -765,10 +807,10 @@ Command *SmallShell::CreateCommand(const char *cmd_line)
 {
   string cmd_s = _trim(string(cmd_line));
   string firstWord = cmd_s.substr(0, cmd_s.find_first_of(" \n"));
-  /**else if (isRedirectAppend(cmd_s))
+  if (isRedirectAppend(cmd_s))
   {
     return new AppendFileCommand(cmd_line);
-  }*/
+  }
   if (isRedirect(cmd_s))
   {
     return new RedirectFileCommand(cmd_line);
@@ -820,10 +862,6 @@ void SmallShell::executeCommand(const char *cmd_line)
   Command *cmd = CreateCommand(cmd_line);
   jobs.removeFinishedJobs();
   if (dynamic_cast<ExternalCommand *>(cmd) == nullptr) // Built-in Command
-  {
-    cmd->execute();
-  }
-  else if (dynamic_cast<IOCommand *>(cmd) != nullptr) // IO Command
   {
     cmd->execute();
   }
