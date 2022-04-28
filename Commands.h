@@ -126,27 +126,38 @@ class JobsList
 private:
   class JobEntry
   {
-  private:
+  protected:
     int job_id;
     string cmd_name;
     int process_id;
     time_t create_time;
     bool is_stopped;
+    int duration;
 
   public:
-    JobEntry(Command *cmd, int process_id, bool is_stopped, int job_id = 0);
-    ~JobEntry() = default;
+    JobEntry(Command *cmd, int process_id, bool is_stopped, int job_id = 0, int duration = -1);
+    virtual ~JobEntry() = default;
     void printJobWithTime();
     int getProcessID();
     int getJobId();
+    int isTimed();
     void printAndDie();
     void printAlarm();
     void stopJob();
     void contJob();
     void printJob();
     bool isStopped();
+    virtual bool isOver();
   };
-
+  class TimedJob : public JobEntry
+  {
+  public:
+    TimedJob(int duration, Command *cmd, int process_id, bool is_stopped, int job_id = 0) 
+    : JobEntry(cmd, process_id, is_stopped, job_id, duration) 
+    {}
+    virtual ~TimedJob() {}
+    bool isOver() override;
+  };
   int max_id;
   map<int, JobEntry> jobs;
   stack<JobEntry> foregroundJob;
@@ -176,6 +187,7 @@ public:
   pid_t lastToBack();
   pid_t jobIdToBack(int JobId);
   void AlarmCheck();
+  void addTimedJob(Command* cmd, pid_t pid, int duration, bool isForeground);
 };
 
 class JobsCommand : public BuiltInCommand
@@ -291,8 +303,12 @@ public:
   void execute() override;
 };
 
-class TimeOutCommand : public BuiltInCommand
+class TimeOutCommand : public Command
 {
+private:
+  int duration = -1;
+  string cmd;
+
 public:
   TimeOutCommand(const char *cmd_line);
   virtual ~TimeOutCommand() {}
@@ -339,6 +355,7 @@ public:
   void stopForeground();
   void runAtFront(pid_t pid);
   void runAtFront(pid_t pid, Command *cmd);
+  void addTimedJob(Command* cmd, pid_t pid, int duration, bool isForeground);
   void AlarmHandle();
 };
 
