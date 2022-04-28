@@ -145,7 +145,7 @@ void ShowPidCommand::execute()
 {
   // SmallShell &smash = SmallShell::getInstance();
   pid_t pid = getpid();
-  printf("%d \n", pid);
+  printf("smash pid id %d \n", pid);
 }
 
 //**************cd command**********************
