@@ -700,15 +700,28 @@ TailCommand::TailCommand(const char *cmd_line)
 
 void TailCommand::execute()
 {
-  if (args.size() > 3 || (args.size() == 3 && !is_number(args[1])))
+  if (args.size() > 3)
   {
     perror("smash error: tail: invalid arguments");
     return;
   }
-  // if there are 3 parameters- the second is N
-  if (args.size() == 3)
+  else if (args.size() == 3)  // if there are 3 parameters- the second is N
   {
-    n = std::stoi(args[1]);
+    if (args[1].at(0) != '-' || !is_number(args[1].substr(1)))
+    {
+      perror("smash error: tail: invalid arguments");
+      return;
+    }
+    n = std::stoi(args[1].substr(1));
+    if (n < 0)
+    {
+      perror("smash error: tail: invalid arguments");
+      return;
+    }
+    else if (n == 0)
+    {
+      return;
+    }
   }
   // the last parameter is the path
   const char *path = args.back().c_str();
@@ -717,13 +730,14 @@ void TailCommand::execute()
   int fd = open(path, O_RDONLY);
   lseek(fd, -1, SEEK_END); // seek pointer at the last char
   int i = 0;               // number of "\n" read from EOF
+  bool last_char = true;  // we are not counting new_line if it's the last char
 
   /* Reading one char at a time from the end of the file,
   until n 'new-line's were read (going BACKWARDS).
   By doing so- the seek pointer is set. */
   while (read(fd, &buf, 1) == 1) 
   {
-    if (buf == '\n')
+    if (buf == '\n' && !last_char)
     {
       i++;
       if (i == n)
@@ -731,13 +745,15 @@ void TailCommand::execute()
         break;
       }
     }
-    if (lseek(fd, -2, SEEK_CUR) < 0)
+    if (lseek(fd, -2, SEEK_CUR) < 0) // handeling reading the first char of the file
     {
+      lseek(fd, 0, SEEK_SET);
+      read(fd, &buf, 1);
+      lseek(fd, 0, SEEK_SET);
       break;
     }
+    last_char = false;
   }
-   
-  lseek(fd, -1, SEEK_CUR);
 
   while (read(fd, &buf, 1) == 1) // writing to stdout
   {
