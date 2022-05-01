@@ -108,7 +108,10 @@ char **Command::getArgsArr()
   char **argsArr = new char *[4];
   argsArr[0] = (char *)("/bin/bash");
   argsArr[1] = (char *)("-c");
-  argsArr[2] = const_cast<char *>(getCmdStr().c_str());
+  string str = getCmdStr();
+  argsArr[2] = new char[str.length() + 1];
+  strcpy(argsArr[2], getCmdStr().c_str());
+  // argsArr[2] = const_cast<char *>(getCmdStr().c_str());
   argsArr[3] = NULL;
   return argsArr;
 }
@@ -705,7 +708,7 @@ void TailCommand::execute()
     perror("smash error: tail: invalid arguments");
     return;
   }
-  else if (args.size() == 3)  // if there are 3 parameters- the second is N
+  else if (args.size() == 3) // if there are 3 parameters- the second is N
   {
     if (args[1].at(0) != '-' || !is_number(args[1].substr(1)))
     {
@@ -730,12 +733,12 @@ void TailCommand::execute()
   int fd = open(path, O_RDONLY);
   lseek(fd, -1, SEEK_END); // seek pointer at the last char
   int i = 0;               // number of "\n" read from EOF
-  bool last_char = true;  // we are not counting new_line if it's the last char
+  bool last_char = true;   // we are not counting new_line if it's the last char
 
   /* Reading one char at a time from the end of the file,
   until n 'new-line's were read (going BACKWARDS).
   By doing so- the seek pointer is set. */
-  while (read(fd, &buf, 1) == 1) 
+  while (read(fd, &buf, 1) == 1)
   {
     if (buf == '\n' && !last_char)
     {
@@ -757,13 +760,42 @@ void TailCommand::execute()
 
   while (read(fd, &buf, 1) == 1) // writing to stdout
   {
-    if (write(1,&buf,1) != 1)
+    if (write(1, &buf, 1) != 1)
     {
       break;
     }
   }
 
   close(fd);
+}
+
+//**************TouchCommand**********************
+TouchCommand::TouchCommand(const char *cmd_line)
+    : BuiltInCommand(cmd_line) {}
+
+void TouchCommand::execute()
+{
+  if (args.size() != 3)
+  {
+    perror("smash error: touch: invalid arguments");
+    return;
+  }
+  struct tm tm;
+  strptime(args[2].c_str(), "%S:%M:%H:%d:%m:%Y", &tm);
+  time_t t = mktime(&tm);
+  if (t == -1)
+  {
+    perror("smash error: mktime failed");
+    return;
+  }
+  struct utimbuf new_time;
+  new_time.actime = t;
+  new_time.modtime = t; 
+  if (utime(args[1].c_str(),&new_time) == -1)
+  {
+    perror("smash error: utime failed");
+    return;
+  }
 }
 
 //**************SmallShell**********************
@@ -864,6 +896,10 @@ Command *SmallShell::CreateCommand(const char *cmd_line)
   else if (isBuiltIn(firstWord, "tail"))
   {
     return new TailCommand(cmd_line);
+  }
+  else if (isBuiltIn(firstWord, "touch"))
+  {
+    return new TouchCommand(cmd_line);
   }
   else
   {
