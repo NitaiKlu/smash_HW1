@@ -314,7 +314,7 @@ void JobsList::addJobFromZsignal(JobEntry &job)
 
 void JobsList::killAllJobs()
 {
-  std::cout << "sending SIGKILL signal to " << getCount() << " jobs:" << std::endl;
+  std::cout << "smash: sending SIGKILL signal to " << getCount() << " jobs:" << std::endl;
   for (auto job_pair : jobs)
   {
     job_pair.second.printAndDie();
