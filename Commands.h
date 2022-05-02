@@ -74,15 +74,6 @@ public:
   void execute() override;
 };
 
-class PipeCommand : public Command
-{
-  // TODO: Add your data members
-public:
-  PipeCommand(const char *cmd_line);
-  virtual ~PipeCommand() {}
-  void execute() override;
-};
-
 class RedirectionCommand : public Command
 {
   // TODO: Add your data members
@@ -135,27 +126,38 @@ class JobsList
 private:
   class JobEntry
   {
-  private:
+  protected:
     int job_id;
     string cmd_name;
     int process_id;
     time_t create_time;
     bool is_stopped;
+    int duration;
 
   public:
-    JobEntry(Command *cmd, int process_id, bool is_stopped,int job_id = 0);
-    ~JobEntry() = default;
+    JobEntry(Command *cmd, int process_id, bool is_stopped, int job_id = 0, int duration = -1);
+    virtual ~JobEntry() = default;
     void printJobWithTime();
     int getProcessID();
     int getJobId();
+    int isTimed();
     void printAndDie();
     void printAlarm();
     void stopJob();
     void contJob();
     void printJob();
     bool isStopped();
+    virtual bool isOver();
   };
-  
+  class TimedJob : public JobEntry
+  {
+  public:
+    TimedJob(int duration, Command *cmd, int process_id, bool is_stopped, int job_id = 0) 
+    : JobEntry(cmd, process_id, is_stopped, job_id, duration) 
+    {}
+    virtual ~TimedJob() {}
+    bool isOver() override;
+  };
   int max_id;
   map<int, JobEntry> jobs;
   stack<JobEntry> foregroundJob;
@@ -163,7 +165,7 @@ private:
 public:
   JobsList();
   ~JobsList() = default;
-  void addJob(Command *cmd, int process_id, bool isForeground = false ,bool is_stopped = false);
+  void addJob(Command *cmd, int process_id, bool isForeground = false, bool is_stopped = false);
   void addJob(JobEntry &job, bool isForeground = false);
   void addJobFromZsignal(JobEntry &job);
   void printJobsList();
@@ -185,6 +187,7 @@ public:
   pid_t lastToBack();
   pid_t jobIdToBack(int JobId);
   void AlarmCheck();
+  void addTimedJob(Command* cmd, pid_t pid, int duration, bool isForeground);
 };
 
 class JobsCommand : public BuiltInCommand
@@ -213,6 +216,7 @@ public:
 class ForegroundCommand : public BuiltInCommand
 {
   JobsList *jobs_ptr;
+
 public:
   ForegroundCommand(const char *cmd_line, JobsList *jobs);
   virtual ~ForegroundCommand() {}
@@ -222,6 +226,7 @@ public:
 class BackgroundCommand : public BuiltInCommand
 {
   JobsList *jobs_ptr;
+
 public:
   BackgroundCommand(const char *cmd_line, JobsList *jobs);
   virtual ~BackgroundCommand() {}
@@ -242,13 +247,15 @@ class IOCommand : public BuiltInCommand
 {
 protected:
   string destination = "";
+  string source = "";
+
 public:
   IOCommand(const char *cmd_line);
   virtual ~IOCommand() {}
   void execute() override;
 };
 
-//command > file
+// command > file
 class RedirectFileCommand : public IOCommand
 {
 public:
@@ -257,7 +264,7 @@ public:
   void execute() override;
 };
 
-//command >> file
+// command >> file
 class AppendFileCommand : public IOCommand
 {
 public:
@@ -266,6 +273,27 @@ public:
   void execute() override;
 };
 
+class PipeCommand : public IOCommand
+{
+private:
+  int my_pipe[2];
+
+public:
+  PipeCommand(const char *cmd_line);
+  virtual ~PipeCommand() {}
+  void execute() override;
+};
+
+class PipeErrorCommand : public IOCommand
+{
+private:
+  int my_pipe[2];
+
+public:
+  PipeErrorCommand(const char *cmd_line);
+  virtual ~PipeErrorCommand() {}
+  void execute() override;
+};
 
 class TailCommand : public BuiltInCommand
 {
@@ -276,8 +304,12 @@ public:
   void execute() override;
 };
 
-class TimeOutCommand : public BuiltInCommand
+class TimeOutCommand : public Command
 {
+private:
+  int duration = -1;
+  string cmd;
+
 public:
   TimeOutCommand(const char *cmd_line);
   virtual ~TimeOutCommand() {}
@@ -323,7 +355,8 @@ public:
   pid_t getForegroundPid();
   void stopForeground();
   void runAtFront(pid_t pid);
-  void runAtFront(pid_t pid, Command* cmd);
+  void runAtFront(pid_t pid, Command *cmd);
+  void addTimedJob(Command* cmd, pid_t pid, int duration, bool isForeground);
   void AlarmHandle();
 };
 
