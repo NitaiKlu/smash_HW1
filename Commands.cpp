@@ -116,14 +116,27 @@ char **Command::getArgsArr()
   return argsArr;
 }
 
-//****************************************************
-//**************BuiltInCommand************************
-//****************************************************
+bool Command::isBg()
+{
+  if (args.back().back() == '&')
+  {
+    cout << "Background command" << endl;
+    return true;
+  }
+  return false;
+}
 
+//**************BuiltInCommand************************
 BuiltInCommand::BuiltInCommand(const char *cmd_line)
     : Command(cmd_line, BUILT_IN)
 {
 }
+
+//**************BlankCommand************************
+BlankCommand::BlankCommand(const char *cmd_line)
+    : BuiltInCommand(cmd_line){}
+
+void BlankCommand::execute(){}
 
 //**************chprompt**********************
 ChangePromptCommand::ChangePromptCommand(const char *cmd_line)
@@ -264,11 +277,13 @@ bool JobsList::JobEntry::isStopped()
 {
   return is_stopped;
 }
+
 void JobsList::JobEntry::printAlarm()
 {
-  cout << "smash: timeout "<< duration <<" "<< cmd_name <<"timed out!" << endl;
+  cout << "smash: timeout " << duration << " " << cmd_name << "timed out!" << endl;
 }
-bool JobsList::JobEntry::isOver() 
+
+bool JobsList::JobEntry::isOver()
 {
   time_t stat;
   time(&stat);
@@ -276,12 +291,11 @@ bool JobsList::JobEntry::isOver()
   return (duration > 0) && (duration <= diff);
 }
 
-
-bool JobsList::TimedJob::isOver() 
+bool JobsList::TimedJob::isOver()
 {
   time_t stat;
   time(&stat);
-  //int diff = std::difftime(stat, create_time);
+  // int diff = std::difftime(stat, create_time);
   return duration > 0 && create_time + duration <= stat;
 }
 
@@ -435,7 +449,7 @@ void JobsList::AlarmCheck()
       }
     }
   }
-  JobEntry* fgJob = &(foregroundJob.top()); 
+  JobEntry *fgJob = &(foregroundJob.top());
   if (!foregroundJob.empty() && fgJob->isTimed() && fgJob->isOver()) // if this is a timed job
   {
     fgJob->printAlarm();
@@ -469,10 +483,12 @@ bool JobsList::isForeground()
 {
   return !foregroundJob.empty();
 }
+
 pid_t JobsList::getForegroundPid()
 {
   return foregroundJob.top().getProcessID();
 }
+
 void JobsList::stopForeground()
 {
   JobsList::JobEntry &job = foregroundJob.top();
@@ -480,6 +496,7 @@ void JobsList::stopForeground()
   job.stopJob();
   addJobFromZsignal(job);
 }
+
 pid_t JobsList::lastToFront()
 {
   if (jobs.empty())
@@ -494,6 +511,7 @@ pid_t JobsList::lastToFront()
   addJob(job, true);
   return job.getProcessID();
 }
+
 pid_t JobsList::jobIdToFront(int JobId)
 {
   if (jobs.empty() || jobs.find(JobId) == jobs.end())
@@ -508,6 +526,7 @@ pid_t JobsList::jobIdToFront(int JobId)
   addJob(job, true);
   return job.getProcessID();
 }
+
 pid_t JobsList::lastToBack()
 {
   map<int, JobEntry>::reverse_iterator rit;
@@ -527,6 +546,7 @@ pid_t JobsList::lastToBack()
   rit->second.contJob();
   return rit->second.getProcessID();
 }
+
 pid_t JobsList::jobIdToBack(int JobId)
 {
   map<int, JobEntry>::iterator it = jobs.find(JobId);
@@ -673,9 +693,7 @@ void QuitCommand::execute()
   exit(0);
 }
 
-//****************************************************
 //**************ExternalCommand***********************
-//****************************************************
 ExternalCommand::ExternalCommand(const char *cmd_line)
     : Command(cmd_line, 0)
 {
@@ -683,6 +701,8 @@ ExternalCommand::ExternalCommand(const char *cmd_line)
 
 void ExternalCommand::execute()
 {
+  SmallShell &smash = SmallShell::getInstance();
+  smash.executeExternalCommand(this);
 }
 
 //****************************************************
@@ -732,7 +752,7 @@ void RedirectFileCommand::execute()
     perror("smash error: > invalid arguments");
     return;
   }
-  //int fp = creat(destination.c_str(), O_WRONLY);
+  // int fp = creat(destination.c_str(), O_WRONLY);
   int fp = open(destination.c_str(), O_CREAT | O_TRUNC | O_WRONLY, 0655); // create a file if needed | delete its content first | write only
   if (fp < 0)
   {
@@ -801,9 +821,9 @@ void AppendFileCommand::execute()
     if (close(1) < 0)
     {
       perror("smash error: close failed");
-    }                                                        // close the standard output
+    }                                                              // close the standard output
     int fp = open(destination.c_str(), O_WRONLY | O_APPEND, 0655); // write only | append mode
-    if (fp == -1)                                            // there is no such file
+    if (fp == -1)                                                  // there is no such file
     {
       fp = open(destination.c_str(), O_CREAT | O_WRONLY, 0655); // delete its content first | write only | append mode
       if (fp < 0)
@@ -840,6 +860,7 @@ PipeCommand::PipeCommand(const char *cmd_line)
     : IOCommand(cmd_line)
 {
 }
+
 void PipeCommand::execute()
 {
   if (destination.compare("") == 0)
@@ -910,6 +931,7 @@ PipeErrorCommand::PipeErrorCommand(const char *cmd_line)
     : IOCommand(cmd_line)
 {
 }
+
 void PipeErrorCommand::execute()
 {
   if (destination.compare("") == 0)
@@ -996,6 +1018,7 @@ TimeOutCommand::TimeOutCommand(const char *cmd_line)
     cmd.append(" ");
   }
 }
+
 void TimeOutCommand::execute()
 {
   if (duration == -1)
@@ -1141,8 +1164,8 @@ void TouchCommand::execute()
   }
   struct utimbuf new_time;
   new_time.actime = t;
-  new_time.modtime = t; 
-  if (utime(args[1].c_str(),&new_time) == -1)
+  new_time.modtime = t;
+  if (utime(args[1].c_str(), &new_time) == -1)
   {
     perror("smash error: utime failed");
     return;
@@ -1160,10 +1183,6 @@ SmallShell::~SmallShell()
 {
   // TODO: add your implementation
 }
-
-/**
- * Creates and returns a pointer to Command class which matches the given command line (cmd_line)
- */
 
 bool isBuiltIn(string cmd, const string built_in)
 {
@@ -1223,10 +1242,6 @@ Command *SmallShell::CreateCommand(const char *cmd_line)
   {
     return new PipeCommand(cmd_line);
   }
-  /**else if (isPipeError(cmd_s))
-  {
-    return new PipeCommand(cmd_line);
-  }**/
   else if (isRedirectAppend(cmd_s))
   {
     return new AppendFileCommand(cmd_line);
@@ -1235,11 +1250,15 @@ Command *SmallShell::CreateCommand(const char *cmd_line)
   {
     return new RedirectFileCommand(cmd_line);
   }
+  else if (isBuiltIn(firstWord, ""))
+  {
+    return new BlankCommand(cmd_line);
+  }
   else if (isBuiltIn(firstWord, "timeout"))
   {
     return new TimeOutCommand(cmd_line);
   }
-  if (isBuiltIn(firstWord, "chprompt"))
+  else if (isBuiltIn(firstWord, "chprompt"))
   {
     return new ChangePromptCommand(cmd_line);
   }
@@ -1297,6 +1316,8 @@ void SmallShell::executeCommand(const char *cmd_line)
 {
   Command *cmd = CreateCommand(cmd_line);
   jobs.removeFinishedJobs();
+  cmd->execute();
+  /*
   if (dynamic_cast<ExternalCommand *>(cmd) == nullptr) // Built-in Command
   {
     cmd->execute();
@@ -1328,48 +1349,87 @@ void SmallShell::executeCommand(const char *cmd_line)
       }
     }
   }
+  */
+}
+
+void SmallShell::executeExternalCommand(Command *cmd)
+{
+  char **argsArr = cmd->getArgsArr();
+  pid_t pid = fork();
+  if (pid < 0) // fail
+  {
+    perror("fork failed");
+  }
+  else if (pid == 0) // child
+  {
+    setpgrp();
+    execv(argsArr[0], argsArr);
+    perror("execv failed");
+  }
+  else // parent
+  {
+    if (cmd->isBg())
+    {
+      jobs.addJob(cmd, pid);
+    }
+    else
+    {
+      jobs.addJob(cmd, pid, true);
+      runAtFront(pid, cmd);
+    }
+  }
 }
 
 void SmallShell::printPtompt()
 {
   std::cout << prompt << "> ";
 }
+
 void SmallShell::changePrompt(string new_prompt)
 {
   prompt = new_prompt;
 }
+
 void SmallShell::push_dir(string dir)
 {
   this->directories.push(dir);
 }
+
 void SmallShell::pop_dir()
 {
   this->directories.pop();
 }
+
 string SmallShell::top_dir()
 {
   return this->directories.top();
 }
+
 bool SmallShell::isEmpty_dir()
 {
   return this->directories.empty();
 }
+
 void SmallShell::killForegroundJob()
 {
   jobs.killForegroundJob();
 }
+
 bool SmallShell::isForeground()
 {
   return jobs.isForeground();
 }
+
 pid_t SmallShell::getForegroundPid()
 {
   return jobs.getForegroundPid();
 }
+
 void SmallShell::stopForeground()
 {
   jobs.stopForeground();
 }
+
 void SmallShell::runAtFront(pid_t pid, Command *cmd)
 {
   int stat;

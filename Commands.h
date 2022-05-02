@@ -44,7 +44,6 @@ const string WHITESPACE = " \n\r\t\f\v";
 
 class Command
 {
-  // TODO: Add your data members
 protected:
   vector<string> args;
 
@@ -54,9 +53,9 @@ public:
   virtual void execute() = 0;
   // virtual void prepare();
   // virtual void cleanup();
-  //  TODO: Add your extra methods if needed
   string getCmdStr();
   char **getArgsArr();
+  bool isBg();
 };
 
 class BuiltInCommand : public Command
@@ -85,9 +84,16 @@ public:
   // void cleanup() override;
 };
 
+class BlankCommand : public BuiltInCommand
+{
+public:
+  BlankCommand(const char *cmd_line);
+  virtual ~BlankCommand() = default;
+  void execute() override;
+};
+
 class ChangePromptCommand : public BuiltInCommand
 {
-  // TODO: Add your data members
 public:
   ChangePromptCommand(const char *cmd_line);
   virtual ~ChangePromptCommand() = default;
@@ -344,6 +350,7 @@ public:
   }
   ~SmallShell();
   void executeCommand(const char *cmd_line);
+  void executeExternalCommand(Command *cmd);
   void printPtompt();
   void changePrompt(string new_prompt);
   void push_dir(string dir);
