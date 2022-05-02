@@ -100,6 +100,7 @@ string Command::getCmdStr()
     str += arg;
     str += " ";
   }
+  str.pop_back();
   return str;
 }
 
@@ -109,8 +110,13 @@ char **Command::getArgsArr()
   argsArr[0] = (char *)("/bin/bash");
   argsArr[1] = (char *)("-c");
   string str = getCmdStr();
+  if (str.back() == '&')
+  {
+    str.pop_back();
+    str = _rtrim(str);
+  }
   argsArr[2] = new char[str.length() + 1];
-  strcpy(argsArr[2], getCmdStr().c_str());
+  strcpy(argsArr[2], str.c_str());
   // argsArr[2] = const_cast<char *>(getCmdStr().c_str());
   argsArr[3] = NULL;
   return argsArr;
@@ -118,12 +124,7 @@ char **Command::getArgsArr()
 
 bool Command::isBg()
 {
-  if (args.back().back() == '&')
-  {
-    cout << "Background command" << endl;
-    return true;
-  }
-  return false;
+  return (args.back().back() == '&');
 }
 
 //**************BuiltInCommand************************
