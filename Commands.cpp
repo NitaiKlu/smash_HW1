@@ -135,9 +135,9 @@ BuiltInCommand::BuiltInCommand(const char *cmd_line)
 
 //**************BlankCommand************************
 BlankCommand::BlankCommand(const char *cmd_line)
-    : BuiltInCommand(cmd_line){}
+    : BuiltInCommand(cmd_line) {}
 
-void BlankCommand::execute(){}
+void BlankCommand::execute() {}
 
 //**************chprompt**********************
 ChangePromptCommand::ChangePromptCommand(const char *cmd_line)
@@ -232,7 +232,7 @@ void JobsList::JobEntry::printJobWithTime()
   time_t now;
   time(&now);
   double elapsed = difftime(now, create_time);
-  std::cout << cmd_name << ": " << process_id << " " << elapsed << " secs";
+  std::cout << cmd_name << " : " << process_id << " " << elapsed << " secs";
   if (is_stopped)
     std::cout << " (stopped)";
   std::cout << std::endl;
@@ -241,6 +241,11 @@ void JobsList::JobEntry::printJobWithTime()
 int JobsList::JobEntry::getJobId()
 {
   return this->job_id;
+}
+
+void JobsList::JobEntry::setJobId(int id)
+{
+  this->job_id = id;
 }
 
 int JobsList::JobEntry::isTimed()
@@ -271,7 +276,7 @@ void JobsList::JobEntry::contJob()
 
 void JobsList::JobEntry::printJob()
 {
-  std::cout << cmd_name << ": " << process_id << std::endl;
+  std::cout << cmd_name << " : " << process_id << std::endl;
 }
 
 bool JobsList::JobEntry::isStopped()
@@ -348,7 +353,8 @@ void JobsList::addJobFromZsignal(JobEntry &job)
 {
   if (job.getJobId() == 0)
   { // this was never in jobsList
-    jobs.insert(pair<int, JobEntry>(++max_id, job));
+    job.setJobId(++max_id);
+    jobs.insert(pair<int, JobEntry>(max_id, job));
   }
   else
   { // this was already in jobsList. no need to give new job id
@@ -418,6 +424,11 @@ void JobsList::removeJobById(int jobId)
 JobsList::JobEntry &JobsList::getFgJob()
 {
   return this->foregroundJob.top();
+}
+
+bool JobsList::isExist(int job_id)
+{
+  return jobs.find(job_id) != jobs.end();
 }
 
 JobsList::JobEntry *JobsList::getJobById(int jobId)
@@ -618,7 +629,7 @@ void KillCommand::execute()
   int pid = job_ptr->getPID(jid); // returns -1 if doesn't exist in the jobs list
   if (pid == -1)
   { // job doesn't exist in the Jobs List
-    fprintf(stderr, "smash error: kill: job-id  %d does not exist\n", jid);
+    fprintf(stderr, "smash error: kill: job-id %d does not exist\n", jid);
     return;
   }
   if (kill(pid, signal) == -1)
@@ -646,11 +657,20 @@ ForegroundCommand::ForegroundCommand(const char *cmd_line, JobsList *jobs)
 void ForegroundCommand::execute()
 {
   bool jobSpecified = args.size() > 1;
-  if (jobSpecified && (args.size() > 2 || !is_number(args[1])))
+  if (jobSpecified && (args.size() > 2 || !(is_number(args[1]) || is_number(args[1].substr(1)))))
   {
-    perror("smash error: fg: invalid arguments");
+    std::cerr << "smash error: fg: invalid arguments" << endl;
     return;
   }
+  /*if (jobSpecified)
+  {
+    int job_id = stoi(args[1]);
+    if (!jobs_ptr->isExist(job_id))
+    {
+      std::cerr << "smash error: fg: job-id " << job_id << " does not exist" << endl;
+    }
+  }*/
+
   pid_t pid = jobSpecified ? jobs_ptr->jobIdToFront(stoi(args[1])) : jobs_ptr->lastToFront();
   SmallShell &smash = SmallShell::getInstance();
   if (pid == -1)
@@ -668,11 +688,21 @@ BackgroundCommand::BackgroundCommand(const char *cmd_line, JobsList *jobs)
 void BackgroundCommand::execute()
 {
   bool jobSpecified = args.size() > 1;
-  if (args.size() > 2 || (args.size() > 1 && !is_number(args[1])))
+  if (args.size() > 2 || (args.size() > 1 && !(is_number(args[1]) || is_number(args[1].substr(1)))))
   {
-    perror("smash error: fg: invalid arguments");
+    std::cerr << "smash error: bg: invalid arguments" << endl;
     return;
   }
+  /*
+  if (jobSpecified)
+  {
+    int job_id = stoi(args[1]);
+    if (!jobs_ptr->isExist(job_id))
+    {
+      std::cerr << "smash error: bg: job-id " << job_id << " does not exist" << endl;
+    }
+  }*/
+
   pid_t pid = jobSpecified ? jobs_ptr->jobIdToBack(stoi(args[1])) : jobs_ptr->lastToBack();
   // SmallShell &smash = SmallShell::getInstance();
   kill(pid, SIGCONT);

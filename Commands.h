@@ -146,6 +146,7 @@ private:
     void printJobWithTime();
     int getProcessID();
     int getJobId();
+    void setJobId(int id);
     int isTimed();
     void printAndDie();
     void printAlarm();
@@ -177,6 +178,7 @@ public:
   void printJobsList();
   void killAllJobs();
   void removeFinishedJobs();
+  bool isExist(int job_id);
   JobEntry *getJobById(int jobId);
   JobEntry &getFgJob();
   void removeJobById(int jobId);

@@ -1,0 +1,8 @@
+wait failed: No child processes
+smash error: kill: invalid arguments: Success
+smash error: kill: invalid arguments: Success
+smash error: creat failed: No such file or directory
+ls: write error: Bad file descriptor
+/bin/bash: /tmp/smash/test/new: No such file or directory
+smash error: creat failed: Permission denied
+ls: write error: Bad file descriptor
