@@ -554,7 +554,7 @@ pid_t JobsList::lastToBack()
     }
     if (rit == jobs.rend())
     {
-        perror("smash error: bg: there is no stopped jobs to resume");
+        fprintf(stderr,"smash error: bg: there is no stopped jobs to resume\n");
         return -1;
     }
     rit->second.printJob();
@@ -1140,12 +1140,12 @@ TimeOutCommand::TimeOutCommand(const char* cmd_line)
 {
     if (args.size() < 3)
     {
-        perror("smash error: timeout: invalid arguments");
+        fprintf(stderr,"smash error: timeout: invalid arguments\n");
         return;
     }
     if (!is_number(args[1]))
     {
-        perror("smash error: timeout: invalid arguments");
+        fprintf(stderr,"smash error: timeout: invalid arguments\n");
         return;
     }
     duration = std::stoi(args[1]);
