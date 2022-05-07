@@ -193,11 +193,9 @@ void ChangeDirCommand::execute()
         else {
             //this is to be deleted if Ayala says so:
             if(smash.getDirSize() == 1) {
-                char* path = new char[COMMAND_ARGS_MAX_LENGTH];
                 getcwd(path, COMMAND_ARGS_MAX_LENGTH);
                 smash.pop_dir();
                 smash.push_dir(path);
-                delete path;
             }
             //until here
             //smash.pop_dir();
@@ -205,11 +203,9 @@ void ChangeDirCommand::execute()
         return;
     }
     // push current wd to the stack
-    char* path = new char[COMMAND_ARGS_MAX_LENGTH];
     if(getcwd(path, COMMAND_ARGS_MAX_LENGTH) < 0) {
         perror("smash error: getcwd failed");
     }
-    delete path;
     smash.push_dir(path);
     // cd to whatever path specified
     int res = chdir(args[1].c_str());
@@ -462,13 +458,10 @@ void JobsList::AlarmCheck()
 {
     if (jobs.empty() && foregroundJob.empty())
         return;
-    pid_t pid;
     for (auto job_pair_it = jobs.begin(), next_it = job_pair_it; job_pair_it != jobs.end(); job_pair_it = next_it)
     {
         ++next_it;
-        pid = job_pair_it->second.getProcessID();
         JobEntry* job = &(job_pair_it->second);
-        int stat;
         if (job->isTimed()) // if this is a timed job
         {
             if (job->isOver())
@@ -776,7 +769,8 @@ RedirectFileCommand::RedirectFileCommand(const char* cmd_line)
 {
     string cmd = "", target = "";
     bool isTarget = false;
-    for (int i = 0; i < args.size(); i++)
+    int size = args.size();
+    for (int i = 0; i < size; i++)
     {
         if (args[i].find(">") != std::string::npos)
         {
@@ -875,7 +869,8 @@ AppendFileCommand::AppendFileCommand(const char* cmd_line)
 {
     string cmd = "", target = "";
     bool isTarget = false;
-    for (int i = 0; i < args.size(); i++)
+    int size = args.size();
+    for (int i = 0; i < size; i++)
     {
         if (args[i].find(">>") != std::string::npos)
         {
@@ -961,7 +956,8 @@ PipeCommand::PipeCommand(const char* cmd_line)
 {
     string cmd = "", target = "";
     bool isTarget = false;
-    for (int i = 0; i < args.size(); i++)
+    int size = args.size();
+    for (int i = 0; i < size; i++)
     {
         if (args[i].find("|") != std::string::npos)
         {
@@ -1058,7 +1054,8 @@ PipeErrorCommand::PipeErrorCommand(const char* cmd_line)
 {
     string cmd = "", target = "";
     bool isTarget = false;
-    for (int i = 0; i < args.size(); i++)
+    int size = args.size();
+    for (int i = 0; i < size; i++)
     {
         if (args[i].find("|&") != std::string::npos)
         {
@@ -1164,7 +1161,8 @@ TimeOutCommand::TimeOutCommand(const char* cmd_line)
         return;
     }
     duration = std::stoi(args[1]);
-    for (int i = 2; i < args.size(); i++)
+    int size = args.size();
+    for (int i = 0; i < size; i++)
     {
         cmd.append(args[i]);
         cmd.append(" ");
@@ -1351,8 +1349,7 @@ bool isBuiltIn(string cmd, const string built_in)
 
 bool isRedirect(string cmd)
 {
-    int redirect_loc = cmd.find(" > ");
-    if (redirect_loc == std::string::npos)
+    if (cmd.find(" > ") == std::string::npos)
     { // no '>' found
         return false;
     }
@@ -1361,8 +1358,7 @@ bool isRedirect(string cmd)
 
 bool isPipe(string cmd)
 {
-    int pipe_loc = cmd.find(" | ");
-    if (pipe_loc == std::string::npos)
+    if (cmd.find(" | ") == std::string::npos)
     { // no '|' found
         return false;
     }
@@ -1371,8 +1367,7 @@ bool isPipe(string cmd)
 
 bool isPipeError(string cmd)
 {
-    int pipe_loc = cmd.find(" |& ");
-    if (pipe_loc == std::string::npos)
+    if (cmd.find(" |& ") == std::string::npos)
     { // no '|' found
         return false;
     }
@@ -1381,8 +1376,7 @@ bool isPipeError(string cmd)
 
 bool isRedirectAppend(string cmd)
 {
-    int redirect_loc = cmd.find(" >> ");
-    if (redirect_loc == std::string::npos)
+    if (cmd.find(" >> ") == std::string::npos)
     { // no '>>' found
         return false;
     }
