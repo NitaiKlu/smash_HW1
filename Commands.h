@@ -359,6 +359,7 @@ public:
   void pop_dir();
   string top_dir();
   bool isEmpty_dir();
+  int getDirSize(); //returns the size of the directories stack
   void killForegroundJob();
   bool isForeground();
   pid_t getForegroundPid();
