@@ -232,6 +232,9 @@ void JobsList::JobEntry::printJobWithTime()
   time_t now;
   time(&now);
   double elapsed = difftime(now, create_time);
+  if(isTimed()) {
+    std::cout << "timeout " << duration << " ";
+  }
   std::cout << cmd_name << " : " << process_id << " " << elapsed << " secs";
   if (is_stopped)
     std::cout << " (stopped)";
@@ -286,7 +289,7 @@ bool JobsList::JobEntry::isStopped()
 
 void JobsList::JobEntry::printAlarm()
 {
-  cout << "smash: timeout " << duration << " " << cmd_name << "timed out!" << endl;
+  cout << "smash: timeout " << duration << " " << cmd_name << " timed out!" << endl;
 }
 
 bool JobsList::JobEntry::isOver()
@@ -748,6 +751,14 @@ void ExternalCommand::execute()
 IOCommand::IOCommand(const char *cmd_line)
     : BuiltInCommand(cmd_line)
 {
+}
+
+void IOCommand::execute() {}
+
+//**************RedirectFileCommand**********************
+RedirectFileCommand::RedirectFileCommand(const char *cmd_line)
+    : IOCommand(cmd_line)
+{
   string cmd = "", target = "";
   bool isTarget = false;
   for (int i = 0; i < args.size(); i++)
@@ -761,33 +772,6 @@ IOCommand::IOCommand(const char *cmd_line)
         target.append(args[i].substr(args[i].find_first_of(">") + 1));
       continue;
     }
-    if (args[i].find(">>") != std::string::npos)
-    {
-      isTarget = true;
-        //> is not the first char ==> there is a command before
-        cmd.append(args[i].substr(0,args[i].find_first_of(">>")));
-        //> is the first char ==> there is a stream after
-        target.append(args[i].substr(args[i].find_first_of(">>") + 1));
-      continue;
-    }
-    if (args[i].find("|") != std::string::npos)
-    {
-      isTarget = true;
-        //> is not the first char ==> there is a command before
-        cmd.append(args[i].substr(0,args[i].find_first_of("|")));
-        //> is the first char ==> there is a stream after
-        target.append(args[i].substr(args[i].find_first_of("|") + 1));
-      continue;
-    }
-    if (args[i].find("|&") != std::string::npos)
-    {
-      isTarget = true;
-        //> is not the first char ==> there is a command before
-        cmd.append(args[i].substr(0,args[i].find_first_of("|&")));
-        //> is the first char ==> there is a stream after
-        target.append(args[i].substr(args[i].find_first_of("|&") + 1));
-      continue;
-    }
     if (!isTarget) // still writing the command ______ >
     {
       cmd.append(args[i]);
@@ -796,18 +780,11 @@ IOCommand::IOCommand(const char *cmd_line)
     else // we now take the target  >  _______
     {
       target.append(args[i]);
+      target.append(" ");
     }
   }
   destination = target;
   source = cmd;
-}
-
-void IOCommand::execute() {}
-
-//**************RedirectFileCommand**********************
-RedirectFileCommand::RedirectFileCommand(const char *cmd_line)
-    : IOCommand(cmd_line)
-{
 }
 
 void RedirectFileCommand::execute()
@@ -848,7 +825,7 @@ void RedirectFileCommand::execute()
       perror("smash error: close failed");
       return;
     } 
-    if (dynamic_cast<ExternalCommand *>(cmd) == nullptr) // Built in Command
+    /**if (dynamic_cast<ExternalCommand *>(cmd) == nullptr) // Built in Command
     {
       cmd->execute();
       //exit(0);
@@ -859,7 +836,8 @@ void RedirectFileCommand::execute()
     if (execv(argsArr[0], argsArr) < 0)
     {
       perror("smash error: execv failed");
-    }
+    }**/
+    cmd->execute();
   }
   else
   { // parent
@@ -879,6 +857,32 @@ void RedirectFileCommand::execute()
 AppendFileCommand::AppendFileCommand(const char *cmd_line)
     : IOCommand(cmd_line)
 {
+  string cmd = "", target = "";
+  bool isTarget = false;
+  for (int i = 0; i < args.size(); i++)
+  {
+    if (args[i].find(">>") != std::string::npos)
+    {
+      isTarget = true;
+        //> is not the first char ==> there is a command before
+        cmd.append(args[i].substr(0,args[i].find_first_of(">>")));
+        //> is the first char ==> there is a stream after
+        target.append(args[i].substr(args[i].find_first_of(">>") + 1));
+      continue;
+    }
+    if (!isTarget) // still writing the command ______ >
+    {
+      cmd.append(args[i]);
+      cmd.append(" ");
+    }
+    else // we now take the target  >  _______
+    {
+      target.append(args[i]);
+      target.append(" ");
+    }
+  }
+  destination = target;
+  source = cmd;
 }
 
 void AppendFileCommand::execute()
@@ -910,7 +914,7 @@ void AppendFileCommand::execute()
         perror("smash error: open failed");
       }
     }
-    if (dynamic_cast<ExternalCommand *>(cmd) == nullptr) // Built in Command
+    /**if (dynamic_cast<ExternalCommand *>(cmd) == nullptr) // Built in Command
     {
       cmd->execute();
       close(fp);
@@ -922,7 +926,8 @@ void AppendFileCommand::execute()
     {
       perror("smash error: execv failed");
     }
-    close(fp);
+    close(fp);**/
+    cmd->execute();
   }
   else
   { // parent
@@ -938,6 +943,32 @@ void AppendFileCommand::execute()
 PipeCommand::PipeCommand(const char *cmd_line)
     : IOCommand(cmd_line)
 {
+  string cmd = "", target = "";
+  bool isTarget = false;
+  for (int i = 0; i < args.size(); i++)
+  {
+    if (args[i].find("|") != std::string::npos)
+    {
+      isTarget = true;
+        //> is not the first char ==> there is a command before
+        cmd.append(args[i].substr(0,args[i].find_first_of("|")));
+        //> is the first char ==> there is a stream after
+        target.append(args[i].substr(args[i].find_first_of("|") + 1));
+      continue;
+    }
+    if (!isTarget) // still writing the command ______ >
+    {
+      cmd.append(args[i]);
+      cmd.append(" ");
+    }
+    else // we now take the target  >  _______
+    {
+      target.append(args[i]);
+      target.append(" ");
+    }
+  }
+  destination = target;
+  source = cmd;
 }
 
 void PipeCommand::execute()
@@ -965,14 +996,15 @@ void PipeCommand::execute()
     close(my_pipe[0]); // son can't read from pipe
     close(1);
     dup(my_pipe[1]);                                     // now entry 1 in FDT is my_pipe[0]
-    if (dynamic_cast<ExternalCommand *>(cmd) == nullptr) // Built in Command
+    /**if (dynamic_cast<ExternalCommand *>(cmd) == nullptr) // Built in Command
     {
       cmd->execute();
       exit(0);
     }
     char **argsArr = cmd->getArgsArr();
     setpgrp();
-    execv(argsArr[0], argsArr);
+    execv(argsArr[0], argsArr);**/
+    cmd->execute();
   }
   else
   {
@@ -985,7 +1017,6 @@ void PipeCommand::execute()
     {
       perror("wait failed");
     }
-    char **argsArr = after->getArgsArr(); // now we run the after command
     pid_t pid = fork();
     if (pid < 0)
     {
@@ -993,7 +1024,7 @@ void PipeCommand::execute()
     }
     if (pid == 0) // child
     {
-      execv(argsArr[0], argsArr);
+      after->execute();
     }
     else
     { // parent closing things up
@@ -1009,6 +1040,32 @@ void PipeCommand::execute()
 PipeErrorCommand::PipeErrorCommand(const char *cmd_line)
     : IOCommand(cmd_line)
 {
+  string cmd = "", target = "";
+  bool isTarget = false;
+  for (int i = 0; i < args.size(); i++)
+  {
+    if (args[i].find("|&") != std::string::npos)
+    {
+      isTarget = true;
+        //> is not the first char ==> there is a command before
+        cmd.append(args[i].substr(0,args[i].find_first_of("|&")));
+        //> is the first char ==> there is a stream after
+        target.append(args[i].substr(args[i].find_first_of("|&") + 1));
+      continue;
+    }
+    if (!isTarget) // still writing the command ______ >
+    {
+      cmd.append(args[i]);
+      cmd.append(" ");
+    }
+    else // we now take the target  >  _______
+    {
+      target.append(args[i]);
+      target.append(" ");
+    }
+  }
+  destination = target;
+  source = cmd;
 }
 
 void PipeErrorCommand::execute()
@@ -1036,14 +1093,15 @@ void PipeErrorCommand::execute()
     close(my_pipe[0]); // son can't read from pipe
     close(1);
     dup(my_pipe[1]);                                     // now entry 1 in FDT is my_pipe[0]
-    if (dynamic_cast<ExternalCommand *>(cmd) == nullptr) // Built in Command
+    /**if (dynamic_cast<ExternalCommand *>(cmd) == nullptr) // Built in Command
     {
       cmd->execute();
       exit(0);
     }
     char **argsArr = cmd->getArgsArr();
     setpgrp();
-    execv(argsArr[0], argsArr);
+    execv(argsArr[0], argsArr);**/
+    cmd->execute();
   }
   else
   {
@@ -1056,7 +1114,6 @@ void PipeErrorCommand::execute()
     {
       perror("wait failed");
     }
-    char **argsArr = after->getArgsArr(); // now we run the after command
     pid_t pid = fork();
     if (pid < 0)
     {
@@ -1064,7 +1121,7 @@ void PipeErrorCommand::execute()
     }
     if (pid == 0) // child
     {
-      execv(argsArr[0], argsArr);
+      after->execute();
     }
     else
     { // parent closing things up
@@ -1158,20 +1215,20 @@ void TailCommand::execute()
 {
   if (args.size() > 3)
   {
-    perror("smash error: tail: invalid arguments");
+    fprintf(stderr, "smash error: tail: invalid arguments\n");
     return;
   }
   else if (args.size() == 3) // if there are 3 parameters- the second is N
   {
     if (args[1].at(0) != '-' || !is_number(args[1].substr(1)))
     {
-      perror("smash error: tail: invalid arguments");
+      fprintf(stderr, "smash error: tail: invalid arguments\n");
       return;
     }
     n = std::stoi(args[1].substr(1));
     if (n < 0)
     {
-      perror("smash error: tail: invalid arguments");
+      fprintf(stderr, "smash error: tail: invalid arguments\n");
       return;
     }
     else if (n == 0)
@@ -1184,6 +1241,9 @@ void TailCommand::execute()
 
   char buf;
   int fd = open(path, O_RDONLY);
+  if(fd < 0) {
+    perror("smash error: open failed");
+  }
   lseek(fd, -1, SEEK_END); // seek pointer at the last char
   int i = 0;               // number of "\n" read from EOF
   bool last_char = true;   // we are not counting new_line if it's the last char
@@ -1230,7 +1290,7 @@ void TouchCommand::execute()
 {
   if (args.size() != 3)
   {
-    perror("smash error: touch: invalid arguments");
+    fprintf(stderr,"smash error: touch: invalid arguments\n");
     return;
   }
   struct tm tm;
@@ -1275,7 +1335,7 @@ bool isBuiltIn(string cmd, const string built_in)
 
 bool isRedirect(string cmd)
 {
-  int redirect_loc = cmd.find(">");
+  int redirect_loc = cmd.find(" > ");
   if (redirect_loc == std::string::npos)
   { // no '>' found
     return false;
@@ -1285,7 +1345,7 @@ bool isRedirect(string cmd)
 
 bool isPipe(string cmd)
 {
-  int pipe_loc = cmd.find("|");
+  int pipe_loc = cmd.find(" | ");
   if (pipe_loc == std::string::npos)
   { // no '|' found
     return false;
@@ -1295,7 +1355,7 @@ bool isPipe(string cmd)
 
 bool isPipeError(string cmd)
 {
-  int pipe_loc = cmd.find("|&");
+  int pipe_loc = cmd.find(" |& ");
   if (pipe_loc == std::string::npos)
   { // no '|' found
     return false;
@@ -1305,7 +1365,7 @@ bool isPipeError(string cmd)
 
 bool isRedirectAppend(string cmd)
 {
-  int redirect_loc = cmd.find(">>");
+  int redirect_loc = cmd.find(" >> ");
   if (redirect_loc == std::string::npos)
   { // no '>>' found
     return false;
@@ -1559,6 +1619,7 @@ void SmallShell::runAtFront(pid_t pid)
 
 void SmallShell::AlarmHandle()
 {
+  cout << "smash: got an alarm" << endl;
   jobs.AlarmCheck();
 }
 
