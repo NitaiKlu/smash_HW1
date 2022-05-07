@@ -162,7 +162,7 @@ void ShowPidCommand::execute()
 {
   // SmallShell &smash = SmallShell::getInstance();
   pid_t pid = getpid();
-  printf("smash pid id %d \n", pid);
+  printf("smash pid is %d \n", pid);
 }
 
 //**************cd command**********************
@@ -617,11 +617,15 @@ KillCommand::KillCommand(const char *cmd_line, JobsList *jobs)
 
 void KillCommand::execute()
 {
+  if(args.size() != 3) {
+    fprintf(stderr,"smash error: kill: invalid arguments\n");
+    return;
+  }
   int signal = GetSignal(args[1]);
   // invalid command check:
-  if (args.size() != 3 || signal == -1 || !is_number(args[2]))
+  if (signal == -1 || signal > 64 || !(is_number(args[2]) || is_number(args[2].substr(1))))
   {
-    perror("smash error: kill: invalid arguments");
+    fprintf(stderr,"smash error: kill: invalid arguments\n");
     return;
   }
   // checking for the job in the jobs list:
@@ -748,10 +752,40 @@ IOCommand::IOCommand(const char *cmd_line)
   bool isTarget = false;
   for (int i = 0; i < args.size(); i++)
   {
-    if (args[i].find(">") != std::string::npos || args[i].find(">>") != std::string::npos ||
-        args[i].find("|") != std::string::npos || args[i].find("|&") != std::string::npos)
+    if (args[i].find(">") != std::string::npos)
     {
       isTarget = true;
+        //> is not the first char ==> there is a command before
+        cmd.append(args[i].substr(0,args[i].find_first_of(">")));
+        //> is the first char ==> there is a stream after
+        target.append(args[i].substr(args[i].find_first_of(">") + 1));
+      continue;
+    }
+    if (args[i].find(">>") != std::string::npos)
+    {
+      isTarget = true;
+        //> is not the first char ==> there is a command before
+        cmd.append(args[i].substr(0,args[i].find_first_of(">>")));
+        //> is the first char ==> there is a stream after
+        target.append(args[i].substr(args[i].find_first_of(">>") + 1));
+      continue;
+    }
+    if (args[i].find("|") != std::string::npos)
+    {
+      isTarget = true;
+        //> is not the first char ==> there is a command before
+        cmd.append(args[i].substr(0,args[i].find_first_of("|")));
+        //> is the first char ==> there is a stream after
+        target.append(args[i].substr(args[i].find_first_of("|") + 1));
+      continue;
+    }
+    if (args[i].find("|&") != std::string::npos)
+    {
+      isTarget = true;
+        //> is not the first char ==> there is a command before
+        cmd.append(args[i].substr(0,args[i].find_first_of("|&")));
+        //> is the first char ==> there is a stream after
+        target.append(args[i].substr(args[i].find_first_of("|&") + 1));
       continue;
     }
     if (!isTarget) // still writing the command ______ >
@@ -783,16 +817,17 @@ void RedirectFileCommand::execute()
     perror("smash error: > invalid arguments");
     return;
   }
-  // int fp = creat(destination.c_str(), O_WRONLY);
   int fp = open(destination.c_str(), O_CREAT | O_TRUNC | O_WRONLY, 0655); // create a file if needed | delete its content first | write only
   if (fp < 0)
   {
-    perror("smash error: creat failed");
+    perror("smash error: open failed");
+    return;
   }
   pid_t pid = fork();
   if (pid < 0)
   {
     perror("smash error: fork failed");
+    return;
   }
   SmallShell &smash = SmallShell::getInstance();
   Command *cmd = smash.CreateCommand(source.c_str());
@@ -801,13 +836,23 @@ void RedirectFileCommand::execute()
     if (close(1) < 0)
     {
       perror("smash error: close failed");
+      return;
     }        // close the standard output
     dup(fp); // now fp is in standard output
-    close(fp);
+    if(dup < 0) {
+      perror("smash error: dup failed");
+      return;
+    }
+    if (close(fp) < 0)
+    {
+      perror("smash error: close failed");
+      return;
+    } 
     if (dynamic_cast<ExternalCommand *>(cmd) == nullptr) // Built in Command
     {
       cmd->execute();
-      exit(0);
+      //exit(0);
+      return;
     }
     char **argsArr = cmd->getArgsArr();
     setpgrp();
@@ -823,7 +868,10 @@ void RedirectFileCommand::execute()
     {
       perror("wait failed");
     }
-    close(fp);
+    if (close(fp) < 0)
+    {
+      perror("smash error: close failed");
+    }
   }
 }
 
@@ -1227,7 +1275,7 @@ bool isBuiltIn(string cmd, const string built_in)
 
 bool isRedirect(string cmd)
 {
-  int redirect_loc = cmd.find(" > ");
+  int redirect_loc = cmd.find(">");
   if (redirect_loc == std::string::npos)
   { // no '>' found
     return false;
@@ -1237,7 +1285,7 @@ bool isRedirect(string cmd)
 
 bool isPipe(string cmd)
 {
-  int pipe_loc = cmd.find(" | ");
+  int pipe_loc = cmd.find("|");
   if (pipe_loc == std::string::npos)
   { // no '|' found
     return false;
@@ -1247,7 +1295,7 @@ bool isPipe(string cmd)
 
 bool isPipeError(string cmd)
 {
-  int pipe_loc = cmd.find(" |& ");
+  int pipe_loc = cmd.find("|&");
   if (pipe_loc == std::string::npos)
   { // no '|' found
     return false;
@@ -1257,7 +1305,7 @@ bool isPipeError(string cmd)
 
 bool isRedirectAppend(string cmd)
 {
-  int redirect_loc = cmd.find(" >> ");
+  int redirect_loc = cmd.find(">>");
   if (redirect_loc == std::string::npos)
   { // no '>>' found
     return false;
