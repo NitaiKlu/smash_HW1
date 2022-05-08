@@ -46,6 +46,7 @@ class Command
 {
 protected:
   vector<string> args;
+  string cmd_line_str;
 
 public:
   Command(const char *cmd_line, int type);

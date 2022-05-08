@@ -80,36 +80,38 @@ void _removeBackgroundSign(char *cmd_line)
 //**************Command**********************
 Command::Command(const char *cmd_line, int type)
 {
+    char *cmd_line_new = new char[COMMAND_ARGS_MAX_LENGTH];
+    strcpy(cmd_line_new, cmd_line);
+    cmd_line_str = string(cmd_line_new);
     if (type == BUILT_IN && _isBackgroundComamnd(cmd_line))
     {
-        char *cmd_line_new = new char[COMMAND_ARGS_MAX_LENGTH];
-        strcpy(cmd_line_new, cmd_line);
         _removeBackgroundSign(cmd_line_new);
         args = _parseCommandLineVector(cmd_line_new);
-        delete cmd_line_new;
         return;
     }
     args = _parseCommandLineVector(cmd_line);
+
 }
 
 string Command::getCmdStr()
 {
-    string str;
+    /**string str;
     for (auto arg : args)
     {
         str.append(arg);
         str.append(" ");
     }
     str.pop_back();
-    return str;
+    return str;*/
+    return this->cmd_line_str;
 }
 
 char **Command::getArgsArr()
 {
     char **argsArr = new char *[4];
     argsArr[0] = (char *)("/bin/bash");
-    argsArr[1] = (char *)("-c");
-    string str = getCmdStr();
+    argsArr[1] = (char *)("-c"); 
+    string str = _rtrim(getCmdStr());
     if (str.back() == '&')
     {
         str.pop_back();
@@ -1075,10 +1077,10 @@ PipeErrorCommand::PipeErrorCommand(const char *cmd_line)
         if (args[i].find("|&") != std::string::npos)
         {
             isTarget = true;
-            //> is not the first char ==> there is a command before
+            /*/> is not the first char ==> there is a command before
             cmd.append(args[i].substr(0, args[i].find_first_of("|&")));
             //> is the first char ==> there is a stream after
-            target.append(args[i].substr(args[i].find_first_of("|&") + 1));
+            target.append(args[i].substr(args[i].find_first_of("|&") + 1));*/
             continue;
         }
         if (!isTarget) // still writing the command ______ >
@@ -1521,8 +1523,8 @@ void SmallShell::executeCommand(const char *cmd_line)
 
 void SmallShell::executeExternalCommand(Command *cmd)
 {
-    //char **argsArr = cmd->getArgsArr();
-    string str = cmd->getCmdStr();
+    char **argsArr = cmd->getArgsArr();
+    /**string str = cmd->getCmdStr();
     if (str.back() == '&')
     {
         str.pop_back();
@@ -1533,7 +1535,7 @@ void SmallShell::executeExternalCommand(Command *cmd)
         (char *)("-c"),
         (char *)str.c_str(),
         nullptr
-    };
+    };*/
     pid_t pid = fork();
     if (pid < 0) // fail
     {
@@ -1542,7 +1544,7 @@ void SmallShell::executeExternalCommand(Command *cmd)
     else if (pid == 0) // child
     {
         setpgrp();
-        execv(line[0], line);
+        execv(argsArr[0], argsArr);
         perror("execv failed");
     }
     else // parent
