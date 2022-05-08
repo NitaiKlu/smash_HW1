@@ -887,10 +887,10 @@ AppendFileCommand::AppendFileCommand(const char *cmd_line)
         if (args[i].find(">>") != std::string::npos)
         {
             isTarget = true;
-            //> is not the first char ==> there is a command before
+            /*> is not the first char ==> there is a command before
             cmd.append(args[i].substr(0, args[i].find_first_of(">>")));
             //> is the first char ==> there is a stream after
-            target.append(args[i].substr(args[i].find_first_of(">>") + 1));
+            target.append(args[i].substr(args[i].find_first_of(">>") + 1));*/
             continue;
         }
         if (!isTarget) // still writing the command ______ >
@@ -910,11 +910,6 @@ AppendFileCommand::AppendFileCommand(const char *cmd_line)
 
 void AppendFileCommand::execute()
 {
-    if (destination.compare("") == 0)
-    { // illegal command
-        perror("smash error: > invalid arguments");
-        return;
-    }
     pid_t pid = fork();
     if (pid < 0)
     {
@@ -928,8 +923,8 @@ void AppendFileCommand::execute()
         {
             perror("smash error: close failed");
         }                                                              // close the standard output
-        int fp = open(destination.c_str(), O_WRONLY | O_APPEND, 0655); // write only | append mode
-        if (fp == -1)                                                  // there is no such file
+        int fp = open(destination.c_str(),  O_WRONLY | O_APPEND, 0655); // write only | append mode
+        if (fp < 0)                                                  // there is no such file
         {
             fp = open(destination.c_str(), O_CREAT | O_WRONLY, 0655); // delete its content first | write only | append mode
             if (fp < 0)
