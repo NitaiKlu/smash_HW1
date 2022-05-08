@@ -419,12 +419,12 @@ void JobsList::removeFinishedJobs()
         pid = job_pair_it->second.getProcessID();
         int stat;
         pid_t res = waitpid(pid, &stat, WNOHANG);
-        if (res < 0)
+        /**if (res < 0)
         {
             perror("wait failed");
         }
         else
-        {
+        {**/
             if (WIFEXITED(stat)) // child terminated normally
             {
                 removeJobById(job_pair_it->first);
@@ -437,7 +437,7 @@ void JobsList::removeFinishedJobs()
                     removeJobById(job_pair_it->first);
                 }
             }
-        }
+        //}
     }
 }
 
@@ -1543,6 +1543,7 @@ void SmallShell::executeExternalCommand(Command *cmd)
     }
     else if (pid == 0) // child
     {
+        stopRunning();
         setpgrp();
         execv(argsArr[0], argsArr);
         perror("execv failed");
