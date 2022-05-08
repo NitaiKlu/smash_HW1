@@ -338,6 +338,7 @@ private:
   string prompt;
   JobsList jobs;
   stack<string> directories;
+  bool is_running = true;
   SmallShell();
 
 public:
@@ -368,6 +369,8 @@ public:
   void runAtFront(pid_t pid, Command *cmd);
   void addTimedJob(Command* cmd, pid_t pid, int duration, bool isForeground);
   void AlarmHandle();
+  bool isRunning();
+  void stopRunning();
 };
 
 #endif // SMASH_COMMAND_H_
