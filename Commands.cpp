@@ -396,7 +396,7 @@ void JobsList::addJobFromZsignal(JobEntry &job)
 // this is to add a job by timeout command
 void JobsList::addTimedJob(Command *cmd, pid_t pid, int duration, bool isForeground)
 {
-    removeFinishedJobs();
+    //removeFinishedJobs();
     JobsList::TimedJob job(duration, cmd, pid, false, max_id + 1);
     addJob(job, isForeground);
 }
@@ -423,7 +423,7 @@ void JobsList::removeFinishedJobs()
         pid_t res = waitpid(pid, &stat, WNOHANG);
         if (res < 0)
         {
-            perror("wait failed");
+            perror("wait failed1");
         }
         else
         {
@@ -485,7 +485,7 @@ void JobsList::AlarmCheck()
             {
                 job_pair_it->second.printAlarm();
                 kill(job_pair_it->second.getProcessID(), SIGKILL);
-                removeFinishedJobs();
+                //removeFinishedJobs();
             }
         }
     }
@@ -495,7 +495,7 @@ void JobsList::AlarmCheck()
         fgJob->printAlarm();
         kill(fgJob->getProcessID(), SIGKILL);
         stopForeground();
-        removeFinishedJobs();
+        //removeFinishedJobs();
     }
 }
 
@@ -613,7 +613,7 @@ JobsCommand::JobsCommand(const char *cmd_line, JobsList *jobs)
 
 void JobsCommand::execute()
 {
-    job_ptr->removeFinishedJobs();
+    //job_ptr->removeFinishedJobs();
     job_ptr->printJobsList();
 }
 
@@ -874,7 +874,7 @@ void RedirectFileCommand::execute()
         int stat;
         if (waitpid(pid, &stat, WUNTRACED) < 0)
         {
-            perror("wait failed");
+            perror("wait failed2");
         }
         /**if (close(fp) < 0)
         {
@@ -966,7 +966,7 @@ void AppendFileCommand::execute()
         int stat;
         if (waitpid(pid, &stat, WUNTRACED) < 0)
         {
-            perror("wait failed");
+            perror("wait failed3");
         }
     }
 }
@@ -1069,11 +1069,11 @@ void PipeCommand::execute()
             close(my_pipe[1]); // parent can't write to pipe
             if (waitpid(-1, 0, WUNTRACED) < 0)
             {
-                perror("smash error: wait failed");
+                perror("smash error: wait failed4");
             }
             if (waitpid(-1, 0, WUNTRACED) < 0)
             {
-                perror("smash error: wait failed");
+                perror("smash error: wait failed5");
             }
         }
     }
@@ -1160,7 +1160,7 @@ void PipeErrorCommand::execute()
         int stat;
         if (waitpid(pid, &stat, WUNTRACED) < 0)
         {
-            perror("wait failed");
+            perror("wait failed6");
         }
         pid_t pid = fork();
         if (pid < 0)
@@ -1199,30 +1199,19 @@ TimeOutCommand::TimeOutCommand(const char *cmd_line)
     }
     duration = std::stoi(args[1]);
     // int size = args.size();
-    cmd = cmd_line_str.substr(0, cmd_line_str.find_first_of(duration));
+    cmd = cmd_line_str.substr(cmd_line_str.find_first_of(args[1]) + args[1].length());
     cmd = _trim(cmd.c_str());
 }
 
 void TimeOutCommand::execute()
 {
+    SmallShell &smash = SmallShell::getInstance();
+    Command *command = smash.CreateCommand(cmd.c_str());
     if (duration == -1)
     {
         return;
     }
-    SmallShell &smash = SmallShell::getInstance();
-    Command *command = smash.CreateCommand(cmd.c_str());
-    pid_t pid = getpid();
-    /**if (dynamic_cast<ExternalCommand *>(command) == nullptr) // Built in Command
-    {
-        if (alarm(this->duration) < 0)
-        {
-            perror("smash error: alarm failed");
-        }
-        command->execute();
-        return;
-    }
-    char **argsArr = command->getArgsArr(); // External command**/
-    pid = fork();
+    pid_t pid = fork();
     if (pid < 0) // fail
     {
         perror("smash error: fork failed");
@@ -1230,7 +1219,13 @@ void TimeOutCommand::execute()
     else if (pid == 0) // child
     {
         smash.stopRunning();
-        command->execute();
+        if (dynamic_cast<ExternalCommand *>(command) == nullptr) // Built in Command
+        {
+            command->execute();
+            return;
+        }
+        char **argsArr = command->getArgsArr(); // External command
+        execv(argsArr[0], argsArr);
     }
     else // parent
     {
@@ -1240,11 +1235,11 @@ void TimeOutCommand::execute()
         }
         if (_isBackgroundComamnd(cmd.c_str()))
         {
-            smash.addTimedJob(command, pid, duration, false);
+            smash.addTimedJob(this, pid, duration, false);
         }
         else
         {
-            smash.addTimedJob(command, pid, duration, true);
+            smash.addTimedJob(this, pid, duration, true);
             smash.runAtFront(pid, command);
         }
     }
@@ -1407,7 +1402,7 @@ bool isBuiltIn(string cmd, const string built_in)
 
 bool isRedirect(string cmd)
 {
-    if (cmd.find(" > ") == std::string::npos)
+    if (cmd.find(">") == std::string::npos)
     { // no '>' found
         return false;
     }
@@ -1416,7 +1411,7 @@ bool isRedirect(string cmd)
 
 bool isPipe(string cmd)
 {
-    if (cmd.find(" | ") == std::string::npos)
+    if (cmd.find("|") == std::string::npos)
     { // no '|' found
         return false;
     }
@@ -1425,7 +1420,7 @@ bool isPipe(string cmd)
 
 bool isPipeError(string cmd)
 {
-    if (cmd.find(" |& ") == std::string::npos)
+    if (cmd.find("|&") == std::string::npos)
     { // no '|' found
         return false;
     }
@@ -1434,7 +1429,7 @@ bool isPipeError(string cmd)
 
 bool isRedirectAppend(string cmd)
 {
-    if (cmd.find(" >> ") == std::string::npos)
+    if (cmd.find(">>") == std::string::npos)
     { // no '>>' found
         return false;
     }
@@ -1660,7 +1655,7 @@ void SmallShell::runAtFront(pid_t pid, Command *cmd)
     int stat;
     if (waitpid(pid, &stat, WUNTRACED) < 0)
     {
-        perror("wait failed");
+        perror("wait failed7");
     }
     else
     {
@@ -1684,7 +1679,7 @@ void SmallShell::runAtFront(pid_t pid)
     int stat;
     if (waitpid(pid, &stat, WUNTRACED) < 0)
     {
-        perror("wait failed");
+        perror("wait failed8");
     }
     else
     {
