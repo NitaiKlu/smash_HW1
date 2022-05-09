@@ -214,8 +214,10 @@ void ChangeDirCommand::execute()
             perror("smash error: getcwd failed");
         }
         bool popped;
+        string last_path;
         if (!smash.isEmpty_dir())
         {
+            last_path = smash.top_dir();
             smash.pop_dir();
             popped = true;
         }
@@ -227,7 +229,7 @@ void ChangeDirCommand::execute()
             smash.pop_dir();
             if (popped)
             {
-                smash.push_dir(path);
+                smash.push_dir(last_path.c_str());
             }
             return;
         }
@@ -544,7 +546,7 @@ pid_t JobsList::lastToFront()
 {
     if (jobs.empty())
     {
-        perror("smash error: fg: jobs list is empty");
+        fprintf(stderr, "smash error: fg: jobs list is empty\n");
         return -1;
     }
     JobsList::JobEntry job = jobs.rbegin()->second;
@@ -582,7 +584,7 @@ pid_t JobsList::lastToBack()
     }
     if (rit == jobs.rend())
     {
-        perror("smash error: bg: there is no stopped jobs to resume");
+        fprintf(stderr,"smash error: bg: there is no stopped jobs to resume\n");
         return -1;
     }
     rit->second.printJob();
