@@ -181,7 +181,7 @@ ChangeDirCommand::ChangeDirCommand(const char *cmd_line)
 void ChangeDirCommand::execute()
 {
     SmallShell &smash = SmallShell::getInstance();
-    char* path = new char[COMMAND_ARGS_MAX_LENGTH];
+    char *path = new char[COMMAND_ARGS_MAX_LENGTH];
     if (args.size() != 2)
     {
         fprintf(stderr, "smash error: cd: too many arguments\n");
@@ -201,15 +201,9 @@ void ChangeDirCommand::execute()
             perror("smash error: chdir failed");
         }
         else
-        {           
-            // this is to be deleted if Ayala says so:
-            if (smash.getDirSize() == 1)
-            {
-                smash.pop_dir();
-                smash.push_dir(path);
-            }
-            // until here
-            // smash.pop_dir();
+        {
+            smash.pop_dir();
+            smash.push_dir(path);
         }
     }
     else
@@ -219,13 +213,22 @@ void ChangeDirCommand::execute()
         {
             perror("smash error: getcwd failed");
         }
+        bool popped;
+        if (!smash.isEmpty_dir())
+        {
+            smash.pop_dir();
+            popped = true;
+        }
         smash.push_dir(path);
         // cd to whatever path specified
-        int res = chdir(args[1].c_str());
-        if (res == -1)
+        if (chdir(args[1].c_str()) == -1)
         {
             perror("smash error: chdir failed");
             smash.pop_dir();
+            if (popped)
+            {
+                smash.push_dir(path);
+            }
             return;
         }
     }
@@ -420,7 +423,7 @@ void JobsList::removeFinishedJobs()
         pid = job_pair_it->second.getProcessID();
         int stat;
         waitpid(pid, &stat, WNOHANG);
-        //pid_t res = 
+        // pid_t res =
         /**if (res < 0)
         {
             perror("wait failed");
