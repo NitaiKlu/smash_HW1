@@ -199,6 +199,7 @@ void ChangeDirCommand::execute()
         if (chdir(smash.top_dir().c_str()) < 0)
         {
             perror("smash error: chdir failed");
+            return;
         }
         else
         {
@@ -212,6 +213,7 @@ void ChangeDirCommand::execute()
         if (getcwd(path, COMMAND_ARGS_MAX_LENGTH) < 0)
         {
             perror("smash error: getcwd failed");
+            return;
         }
         bool popped;
         string last_path;
@@ -668,6 +670,7 @@ void KillCommand::execute()
     if (kill(pid, signal) == -1)
     {
         perror("smash error: kill failed");
+        return;
     }
     else
     {
@@ -834,13 +837,13 @@ void RedirectFileCommand::execute()
         if (close(1) < 0)
         {
             perror("smash error: close failed");
-            return;
+            exit(1);
         }                                                                       // close the standard output
         int fp = open(destination.c_str(), O_CREAT | O_TRUNC | O_WRONLY, 0655); // create a file if needed | delete its content first | write only
         if (fp < 0)
         {
             perror("smash error: open failed");
-            return;
+            exit(1);
         }
         /**dup(fp); // now fp is in standard output
         if (dup < 0)
@@ -875,6 +878,7 @@ void RedirectFileCommand::execute()
         if (waitpid(pid, &stat, WUNTRACED) < 0)
         {
             perror("wait failed2");
+            return;
         }
         /**if (close(fp) < 0)
         {
@@ -935,6 +939,7 @@ void AppendFileCommand::execute()
         if (close(1) < 0)
         {
             perror("smash error: close failed");
+            exit(1);
         }                                                              // close the standard output
         int fp = open(destination.c_str(), O_WRONLY | O_APPEND, 0655); // write only | append mode
         if (fp < 0)                                                    // there is no such file
@@ -943,7 +948,7 @@ void AppendFileCommand::execute()
             if (fp < 0)
             {
                 perror("smash error: open failed");
-                return;
+                exit(1);
             }
         }
         /**if (dynamic_cast<ExternalCommand *>(cmd) == nullptr) // Built in Command
@@ -969,6 +974,7 @@ void AppendFileCommand::execute()
         if (waitpid(pid, &stat, WUNTRACED) < 0)
         {
             perror("wait failed3");
+            return;
         }
     }
 }
@@ -1028,9 +1034,10 @@ void PipeCommand::execute()
     if (pid < 0)
     {
         perror("smash error: fork failed");
+        return;
     }
     if (pid == 0)
-    {
+    { //son
         Command *cmd = smash.CreateCommand(source.c_str());
         close(my_pipe[0]); // son can't read from pipe
         // close(1);
@@ -1049,11 +1056,12 @@ void PipeCommand::execute()
         cmd->execute();
     }
     else
-    {
+    { //parent
         pid_t pid = fork();
         if (pid < 0)
         {
             perror("smash error: fork failed");
+            return;
         }
         if (pid == 0) // child
         {
@@ -1072,10 +1080,12 @@ void PipeCommand::execute()
             if (waitpid(-1, 0, WUNTRACED) < 0)
             {
                 perror("smash error: wait failed4");
+                return;
             }
             if (waitpid(-1, 0, WUNTRACED) < 0)
             {
                 perror("smash error: wait failed5");
+                return;
             }
         }
     }
@@ -1135,6 +1145,7 @@ void PipeErrorCommand::execute()
     if (pid < 0)
     {
         perror("smash error: fork failed");
+        return;
     }
     if (pid == 0)
     {
@@ -1163,11 +1174,13 @@ void PipeErrorCommand::execute()
         if (waitpid(pid, &stat, WUNTRACED) < 0)
         {
             perror("wait failed6");
+            return;
         }
         pid_t pid = fork();
         if (pid < 0)
         {
             perror("smash error: fork failed");
+            return;
         }
         if (pid == 0) // child
         {
@@ -1217,6 +1230,7 @@ void TimeOutCommand::execute()
     if (pid < 0) // fail
     {
         perror("smash error: fork failed");
+        return;
     }
     else if (pid == 0) // child
     {
@@ -1234,6 +1248,7 @@ void TimeOutCommand::execute()
         if (alarm(this->duration) < 0)
         {
             perror("smash error: alarm failed");
+            return;
         }
         if (_isBackgroundComamnd(cmd.c_str()))
         {
@@ -1575,6 +1590,7 @@ void SmallShell::executeExternalCommand(Command *cmd)
     if (pid < 0) // fail
     {
         perror("fork failed");
+        return;
     }
     else if (pid == 0) // child
     {
@@ -1658,6 +1674,7 @@ void SmallShell::runAtFront(pid_t pid, Command *cmd)
     if (waitpid(pid, &stat, WUNTRACED) < 0)
     {
         perror("wait failed7");
+        return;
     }
     else
     {
@@ -1682,6 +1699,7 @@ void SmallShell::runAtFront(pid_t pid)
     if (waitpid(pid, &stat, WUNTRACED) < 0)
     {
         perror("wait failed8");
+        return;
     }
     else
     {
