@@ -926,6 +926,7 @@ void AppendFileCommand::execute()
     if (pid < 0)
     {
         perror("smash error: fork failed");
+        return;
     }
     if (pid == 0)
     { // son
@@ -942,6 +943,7 @@ void AppendFileCommand::execute()
             if (fp < 0)
             {
                 perror("smash error: open failed");
+                return;
             }
         }
         /**if (dynamic_cast<ExternalCommand *>(cmd) == nullptr) // Built in Command
