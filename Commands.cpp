@@ -790,19 +790,23 @@ void IOCommand::execute() {}
 RedirectFileCommand::RedirectFileCommand(const char *cmd_line)
     : IOCommand(cmd_line)
 {
-    string cmd = "", target = "";
-    bool isTarget = false;
+    // string cmd = "", target = "";
+    source = cmd_line_str.substr(0, cmd_line_str.find_first_of(">"));
+    source = _trim(string(source));
+    destination = cmd_line_str.substr(cmd_line_str.find_first_of(">") + 1);
+    destination = _trim(string(destination));
+    /**bool isTarget = false;
     int size = args.size();
     for (int i = 0; i < size; i++)
     {
         if (args[i].find(">") != std::string::npos)
         {
             isTarget = true;
-            /**> is not the first char ==> there is a command before
+            > is not the first char ==> there is a command before
             cmd.append(args[i].substr(0,args[i].find_first_of(">")));
             //> is the first char ==> there is a stream after
             target.append(args[i].substr(args[i].find_first_of(">") + 1));
-            **/
+            
             continue;
         }
         if (!isTarget) // still writing the command ______ >
@@ -817,7 +821,7 @@ RedirectFileCommand::RedirectFileCommand(const char *cmd_line)
         }
     }
     destination = target;
-    source = cmd;
+    source = cmd;**/
 }
 
 void RedirectFileCommand::execute()
@@ -888,7 +892,7 @@ void RedirectFileCommand::execute()
 AppendFileCommand::AppendFileCommand(const char *cmd_line)
     : IOCommand(cmd_line)
 {
-    string cmd = "", target = "";
+    /**string cmd = "", target = "";
     bool isTarget = false;
     int size = args.size();
     for (int i = 0; i < size; i++)
@@ -896,10 +900,10 @@ AppendFileCommand::AppendFileCommand(const char *cmd_line)
         if (args[i].find(">>") != std::string::npos)
         {
             isTarget = true;
-            /*> is not the first char ==> there is a command before
+            > is not the first char ==> there is a command before
             cmd.append(args[i].substr(0, args[i].find_first_of(">>")));
             //> is the first char ==> there is a stream after
-            target.append(args[i].substr(args[i].find_first_of(">>") + 1));*/
+            target.append(args[i].substr(args[i].find_first_of(">>") + 1));
             continue;
         }
         if (!isTarget) // still writing the command ______ >
@@ -914,7 +918,9 @@ AppendFileCommand::AppendFileCommand(const char *cmd_line)
         }
     }
     destination = target;
-    source = cmd;
+    source = cmd;**/
+    source = cmd_line_str.substr(0, cmd_line_str.find_first_of(">>"));
+    destination = cmd_line_str.substr(cmd_line_str.find_first_of(">>") + 2);
 }
 
 void AppendFileCommand::execute()
@@ -972,7 +978,7 @@ void AppendFileCommand::execute()
 PipeCommand::PipeCommand(const char *cmd_line)
     : IOCommand(cmd_line)
 {
-    string cmd = "", target = "";
+    /**string cmd = "", target = "";
     bool isTarget = false;
     int size = args.size();
     for (int i = 0; i < size; i++)
@@ -998,7 +1004,9 @@ PipeCommand::PipeCommand(const char *cmd_line)
         }
     }
     destination = target;
-    source = cmd;
+    source = cmd;**/
+    source = cmd_line_str.substr(0, cmd_line_str.find_first_of("|"));
+    destination = cmd_line_str.substr(cmd_line_str.find_first_of("|") + 1);
 }
 
 void PipeCommand::execute()
@@ -1076,7 +1084,7 @@ void PipeCommand::execute()
 PipeErrorCommand::PipeErrorCommand(const char *cmd_line)
     : IOCommand(cmd_line)
 {
-    string cmd = "", target = "";
+    /**string cmd = "", target = "";
     bool isTarget = false;
     int size = args.size();
     for (int i = 0; i < size; i++)
@@ -1084,10 +1092,10 @@ PipeErrorCommand::PipeErrorCommand(const char *cmd_line)
         if (args[i].find("|&") != std::string::npos)
         {
             isTarget = true;
-            /*/> is not the first char ==> there is a command before
+            /> is not the first char ==> there is a command before
             cmd.append(args[i].substr(0, args[i].find_first_of("|&")));
             //> is the first char ==> there is a stream after
-            target.append(args[i].substr(args[i].find_first_of("|&") + 1));*/
+            target.append(args[i].substr(args[i].find_first_of("|&") + 1));
             continue;
         }
         if (!isTarget) // still writing the command ______ >
@@ -1102,7 +1110,9 @@ PipeErrorCommand::PipeErrorCommand(const char *cmd_line)
         }
     }
     destination = target;
-    source = cmd;
+    source = cmd;**/
+    source = cmd_line_str.substr(0, cmd_line_str.find_first_of("|&"));
+    destination = cmd_line_str.substr(cmd_line_str.find_first_of("|&") + 2);
 }
 
 void PipeErrorCommand::execute()

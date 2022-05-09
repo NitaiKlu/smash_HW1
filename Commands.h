@@ -255,8 +255,8 @@ public:
 class IOCommand : public BuiltInCommand
 {
 protected:
-  string destination = "";
-  string source = "";
+  string destination;
+  string source;
 
 public:
   IOCommand(const char *cmd_line);
