@@ -169,7 +169,7 @@ void ShowPidCommand::execute()
 {
     // SmallShell &smash = SmallShell::getInstance();
     pid_t pid = getpid();
-    printf("smash pid is %d \n", pid);
+    cout << "smash pid is " << pid << endl;
 }
 
 //**************cd command**********************
@@ -263,10 +263,6 @@ void JobsList::JobEntry::printJobWithTime()
     time_t now;
     time(&now);
     double elapsed = difftime(now, create_time);
-    if (isTimed())
-    {
-        std::cout << "timeout " << duration << " ";
-    }
     std::cout << cmd_name << " : " << process_id << " " << elapsed << " secs";
     if (is_stopped)
         std::cout << " (stopped)";
@@ -321,7 +317,7 @@ bool JobsList::JobEntry::isStopped()
 
 void JobsList::JobEntry::printAlarm()
 {
-    cout << "smash: timeout " << duration << " " << cmd_name << " timed out!" << endl;
+    cout << "smash: " << cmd_name << " timed out!" << endl;
 }
 
 bool JobsList::JobEntry::isOver()
@@ -357,7 +353,7 @@ void JobsList::printJobsList()
 
 void JobsList::addJob(Command *cmd, int process_id, bool isForeground, bool is_stopped)
 {
-    removeFinishedJobs();
+    // removeFinishedJobs();
     if (!isForeground)
     {
         JobsList::JobEntry job(cmd, process_id, is_stopped, max_id + 1);
@@ -372,7 +368,7 @@ void JobsList::addJob(Command *cmd, int process_id, bool isForeground, bool is_s
 
 void JobsList::addJob(JobEntry &job, bool isForeground)
 {
-    removeFinishedJobs();
+    // removeFinishedJobs();
     if (isForeground)
     {
         foregroundJob.push(job);
@@ -424,27 +420,26 @@ void JobsList::removeFinishedJobs()
         ++next_it;
         pid = job_pair_it->second.getProcessID();
         int stat;
-        waitpid(pid, &stat, WNOHANG);
-        // pid_t res =
-        /**if (res < 0)
+        pid_t res = waitpid(pid, &stat, WNOHANG);
+        if (res < 0)
         {
             perror("wait failed");
         }
         else
-        {**/
-        if (WIFEXITED(stat)) // child terminated normally
         {
-            removeJobById(job_pair_it->first);
-        }
-        else if (WIFSIGNALED(stat)) // child terminated by a signal
-        {
-            int sig = WTERMSIG(stat);
-            if (sig == SIGKILL) // job was killed
+            if (WIFEXITED(stat)) // child terminated normally
             {
                 removeJobById(job_pair_it->first);
             }
+            else if (WIFSIGNALED(stat)) // child terminated by a signal
+            {
+                int sig = WTERMSIG(stat);
+                if (sig == SIGKILL) // job was killed
+                {
+                    removeJobById(job_pair_it->first);
+                }
+            }
         }
-        //}
     }
 }
 
@@ -584,7 +579,7 @@ pid_t JobsList::lastToBack()
     }
     if (rit == jobs.rend())
     {
-        fprintf(stderr,"smash error: bg: there is no stopped jobs to resume\n");
+        fprintf(stderr, "smash error: bg: there is no stopped jobs to resume\n");
         return -1;
     }
     rit->second.printJob();
@@ -806,7 +801,7 @@ RedirectFileCommand::RedirectFileCommand(const char *cmd_line)
             cmd.append(args[i].substr(0,args[i].find_first_of(">")));
             //> is the first char ==> there is a stream after
             target.append(args[i].substr(args[i].find_first_of(">") + 1));
-            
+
             continue;
         }
         if (!isTarget) // still writing the command ______ >
@@ -1194,21 +1189,18 @@ TimeOutCommand::TimeOutCommand(const char *cmd_line)
 {
     if (args.size() < 3)
     {
-        perror("smash error: timeout: invalid arguments");
+        fprintf(stderr, "smash error: timeout: invalid arguments\n");
         return;
     }
     if (!is_number(args[1]))
     {
-        perror("smash error: timeout: invalid arguments");
+        fprintf(stderr, "smash error: timeout: invalid arguments\n");
         return;
     }
     duration = std::stoi(args[1]);
-    int size = args.size();
-    for (int i = 0; i < size; i++)
-    {
-        cmd.append(args[i]);
-        cmd.append(" ");
-    }
+    // int size = args.size();
+    cmd = cmd_line_str.substr(0, cmd_line_str.find_first_of(duration));
+    cmd = _trim(cmd.c_str());
 }
 
 void TimeOutCommand::execute()
@@ -1220,11 +1212,7 @@ void TimeOutCommand::execute()
     SmallShell &smash = SmallShell::getInstance();
     Command *command = smash.CreateCommand(cmd.c_str());
     pid_t pid = getpid();
-    if (pid < 0)
-    {
-        perror("smash error: getpid failed");
-    }
-    if (dynamic_cast<ExternalCommand *>(command) == nullptr) // Built in Command
+    /**if (dynamic_cast<ExternalCommand *>(command) == nullptr) // Built in Command
     {
         if (alarm(this->duration) < 0)
         {
@@ -1233,7 +1221,7 @@ void TimeOutCommand::execute()
         command->execute();
         return;
     }
-    char **argsArr = command->getArgsArr(); // External command
+    char **argsArr = command->getArgsArr(); // External command**/
     pid = fork();
     if (pid < 0) // fail
     {
@@ -1241,9 +1229,8 @@ void TimeOutCommand::execute()
     }
     else if (pid == 0) // child
     {
-        setpgrp();
-        execv(argsArr[0], argsArr);
-        perror("execv failed");
+        smash.stopRunning();
+        command->execute();
     }
     else // parent
     {
@@ -1270,6 +1257,11 @@ TailCommand::TailCommand(const char *cmd_line)
 void TailCommand::execute()
 {
     if (args.size() > 3)
+    {
+        fprintf(stderr, "smash error: tail: invalid arguments\n");
+        return;
+    }
+    else if (args.size() <= 1)
     {
         fprintf(stderr, "smash error: tail: invalid arguments\n");
         return;
@@ -1321,7 +1313,10 @@ void TailCommand::execute()
         if (lseek(fd, -2, SEEK_CUR) < 0) // handeling reading the first char of the file
         {
             lseek(fd, 0, SEEK_SET);
-            read(fd, &buf, 1);
+            if (read(fd, &buf, 1) < 0)
+            {
+                perror("smash error: read failed");
+            }
             lseek(fd, 0, SEEK_SET);
             break;
         }
@@ -1690,7 +1685,6 @@ void SmallShell::runAtFront(pid_t pid)
 
 void SmallShell::AlarmHandle()
 {
-    cout << "smash: got an alarm" << endl;
     jobs.AlarmCheck();
 }
 
