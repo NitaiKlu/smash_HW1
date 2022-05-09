@@ -1292,15 +1292,17 @@ void TailCommand::execute()
     if (fd < 0)
     {
         perror("smash error: open failed");
+        return;
     }
     lseek(fd, -1, SEEK_END); // seek pointer at the last char
     int i = 0;               // number of "\n" read from EOF
     bool last_char = true;   // we are not counting new_line if it's the last char
+    int read_success = 0;
 
     /* Reading one char at a time from the end of the file,
     until n 'new-line's were read (going BACKWARDS).
     By doing so- the seek pointer is set. */
-    while (read(fd, &buf, 1) == 1)
+    while ((read_success = read(fd, &buf, 1)) == 1)
     {
         if (buf == '\n' && !last_char)
         {
@@ -1316,21 +1318,39 @@ void TailCommand::execute()
             if (read(fd, &buf, 1) < 0)
             {
                 perror("smash error: read failed");
+                close(fd);
+                return;
             }
             lseek(fd, 0, SEEK_SET);
             break;
         }
         last_char = false;
     }
-
-    while (read(fd, &buf, 1) == 1) // writing to stdout
+    if (read_success < 0)
     {
-        if (write(1, &buf, 1) != 1)
+        perror("smash error: read failed");
+        close(fd);
+        return;
+    }
+
+    int write_success = 0;
+    while ((read_success = read(fd, &buf, 1)) == 1) // writing to stdout
+    {
+        if ((write_success = write(1, &buf, 1)) < 0)
+        {
+            perror("smash error: write failed");
+            close(fd);
+            return;
+        }
+        else if (write_success == 0)
         {
             break;
         }
     }
-
+    if (read_success < 0)
+    {
+        perror("smash error: read failed");
+    }
     close(fd);
 }
 
