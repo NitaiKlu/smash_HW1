@@ -921,6 +921,8 @@ AppendFileCommand::AppendFileCommand(const char *cmd_line)
     source = cmd;**/
     source = cmd_line_str.substr(0, cmd_line_str.find_first_of(">>"));
     destination = cmd_line_str.substr(cmd_line_str.find_first_of(">>") + 2);
+    destination = _trim(string(destination));
+    source = _trim(string(source));
 }
 
 void AppendFileCommand::execute()
@@ -1007,6 +1009,8 @@ PipeCommand::PipeCommand(const char *cmd_line)
     source = cmd;**/
     source = cmd_line_str.substr(0, cmd_line_str.find_first_of("|"));
     destination = cmd_line_str.substr(cmd_line_str.find_first_of("|") + 1);
+    destination = _trim(string(destination));
+    source = _trim(string(source));
 }
 
 void PipeCommand::execute()
@@ -1113,6 +1117,8 @@ PipeErrorCommand::PipeErrorCommand(const char *cmd_line)
     source = cmd;**/
     source = cmd_line_str.substr(0, cmd_line_str.find_first_of("|&"));
     destination = cmd_line_str.substr(cmd_line_str.find_first_of("|&") + 2);
+    destination = _trim(string(destination));
+    source = _trim(string(source));
 }
 
 void PipeErrorCommand::execute()
