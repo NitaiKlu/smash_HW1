@@ -90,7 +90,6 @@ Command::Command(const char *cmd_line, int type)
         return;
     }
     args = _parseCommandLineVector(cmd_line);
-
 }
 
 string Command::getCmdStr()
@@ -110,7 +109,7 @@ char **Command::getArgsArr()
 {
     char **argsArr = new char *[4];
     argsArr[0] = (char *)("/bin/bash");
-    argsArr[1] = (char *)("-c"); 
+    argsArr[1] = (char *)("-c");
     string str = _rtrim(getCmdStr());
     if (str.back() == '&')
     {
@@ -129,7 +128,6 @@ char **Command::getArgsArr()
     argsArr[3] = NULL;
     return argsArr;
 }
-
 
 bool Command::isBg()
 {
@@ -183,7 +181,7 @@ ChangeDirCommand::ChangeDirCommand(const char *cmd_line)
 void ChangeDirCommand::execute()
 {
     SmallShell &smash = SmallShell::getInstance();
-    char path[COMMAND_ARGS_MAX_LENGTH];
+    char* path = new char[COMMAND_ARGS_MAX_LENGTH];
     if (args.size() != 2)
     {
         fprintf(stderr, "smash error: cd: too many arguments\n");
@@ -194,41 +192,44 @@ void ChangeDirCommand::execute()
         if (smash.isEmpty_dir())
         {
             fprintf(stderr, "smash error: cd: OLDPWD not set\n");
+            delete path;
             return;
         }
-        // strcpy(path, smash.top_dir().c_str());
+        getcwd(path, COMMAND_ARGS_MAX_LENGTH);
         if (chdir(smash.top_dir().c_str()) < 0)
         {
             perror("smash error: chdir failed");
         }
         else
-        {
+        {           
             // this is to be deleted if Ayala says so:
             if (smash.getDirSize() == 1)
             {
-                getcwd(path, COMMAND_ARGS_MAX_LENGTH);
                 smash.pop_dir();
                 smash.push_dir(path);
             }
             // until here
             // smash.pop_dir();
         }
-        return;
     }
-    // push current wd to the stack
-    if (getcwd(path, COMMAND_ARGS_MAX_LENGTH) < 0)
+    else
     {
-        perror("smash error: getcwd failed");
+        // push current wd to the stack
+        if (getcwd(path, COMMAND_ARGS_MAX_LENGTH) < 0)
+        {
+            perror("smash error: getcwd failed");
+        }
+        smash.push_dir(path);
+        // cd to whatever path specified
+        int res = chdir(args[1].c_str());
+        if (res == -1)
+        {
+            perror("smash error: chdir failed");
+            smash.pop_dir();
+            return;
+        }
     }
-    smash.push_dir(path);
-    // cd to whatever path specified
-    int res = chdir(args[1].c_str());
-    if (res == -1)
-    {
-        perror("smash error: chdir failed");
-        smash.pop_dir();
-        return;
-    }
+    delete path;
 }
 
 //**************pwd command**********************
@@ -418,25 +419,26 @@ void JobsList::removeFinishedJobs()
         ++next_it;
         pid = job_pair_it->second.getProcessID();
         int stat;
-        pid_t res = waitpid(pid, &stat, WNOHANG);
+        waitpid(pid, &stat, WNOHANG);
+        //pid_t res = 
         /**if (res < 0)
         {
             perror("wait failed");
         }
         else
         {**/
-            if (WIFEXITED(stat)) // child terminated normally
+        if (WIFEXITED(stat)) // child terminated normally
+        {
+            removeJobById(job_pair_it->first);
+        }
+        else if (WIFSIGNALED(stat)) // child terminated by a signal
+        {
+            int sig = WTERMSIG(stat);
+            if (sig == SIGKILL) // job was killed
             {
                 removeJobById(job_pair_it->first);
             }
-            else if (WIFSIGNALED(stat)) // child terminated by a signal
-            {
-                int sig = WTERMSIG(stat);
-                if (sig == SIGKILL) // job was killed
-                {
-                    removeJobById(job_pair_it->first);
-                }
-            }
+        }
         //}
     }
 }
@@ -925,8 +927,8 @@ void AppendFileCommand::execute()
         {
             perror("smash error: close failed");
         }                                                              // close the standard output
-        int fp = open(destination.c_str(),  O_WRONLY | O_APPEND, 0655); // write only | append mode
-        if (fp < 0)                                                  // there is no such file
+        int fp = open(destination.c_str(), O_WRONLY | O_APPEND, 0655); // write only | append mode
+        if (fp < 0)                                                    // there is no such file
         {
             fp = open(destination.c_str(), O_CREAT | O_WRONLY, 0655); // delete its content first | write only | append mode
             if (fp < 0)
