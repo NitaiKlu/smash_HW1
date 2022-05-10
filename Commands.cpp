@@ -437,7 +437,7 @@ void JobsList::removeFinishedJobs()
         }
         else
         {
-            if (WIFEXITED(stat) && !job_pair_it->second.isTimed()) // child terminated normally
+            if (WIFEXITED(stat)) // child terminated normally
             {
                 removeJobById(job_pair_it->first);
             }
@@ -455,6 +455,11 @@ void JobsList::removeFinishedJobs()
 
 void JobsList::removeJobById(int jobId)
 {
+    JobEntry job(pq_timed_jobs.top());
+    if (job.getJobId() == jobId)
+    {
+        pq_timed_jobs.pop();
+    }
     jobs.erase(jobId);
     if (jobId == max_id)
     {
@@ -483,26 +488,29 @@ JobsList::JobEntry *JobsList::getJobById(int jobId)
 
 void JobsList::AlarmCheck()
 {
-    if (pq_timed_jobs.empty() && foregroundJob.empty())
+    if (pq_timed_jobs.empty())
         return;
     if (!pq_timed_jobs.empty())
     {
         TimedJob first(pq_timed_jobs.top());
         if (first.isOver())
         {
-            first.printAlarm();
+            if (first.getDeathTime() < time(NULL))
+            {
+                first.printAlarm();
+            }
             kill(first.getProcessID(), SIGKILL);
             pq_timed_jobs.pop();
-            alarm(pq_timed_jobs.top().getDeathTime());
         }
+        alarm(pq_timed_jobs.top().getDeathTime());
     }
-    JobEntry *fgJob = &(foregroundJob.top());
+    /**JobEntry *fgJob = &(foregroundJob.top());
     if (!foregroundJob.empty() && fgJob->isTimed() && fgJob->isOver()) // if this is a timed job
     {
         fgJob->printAlarm();
         kill(fgJob->getProcessID(), SIGKILL);
         foregroundJob.pop();
-    }
+    }**/
 }
 
 int JobsList::getPID(int jobId)
@@ -1111,6 +1119,7 @@ void TimeOutCommand::execute()
         SmallShell &smash = SmallShell::getInstance();
         smash.stopRunning();
         char **argsArr = command->getArgsArr();
+        setpgrp();
         execv(argsArr[0], argsArr); // supports only external commands
         perror("execv failed");
     }
@@ -1132,11 +1141,7 @@ void TimeOutCommand::execute()
             time(&timer);
             if (timer + duration < smash.closestAlarmFromNow()) // if the new alarm is sooner
             {
-                if (alarm(this->duration) < 0)
-                {
-                    perror("smash error: alarm failed");
-                    return;
-                }
+                alarm(this->duration);
             }
         }
         if (_isBackgroundComamnd(cmd.c_str()))
