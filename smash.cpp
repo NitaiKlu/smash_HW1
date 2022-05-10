@@ -22,7 +22,7 @@ int main(int argc, char *argv[])
     /**{
         perror("smash error: failed to set sig-alrm handler");
     }**/
-
+    //signal(SIGALRM, alarmHandler);
     SmallShell &smash = SmallShell::getInstance();
     while (smash.isRunning())
     {

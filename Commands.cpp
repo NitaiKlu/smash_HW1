@@ -398,7 +398,7 @@ void JobsList::addJobFromZsignal(JobEntry &job)
 // this is to add a job by timeout command
 void JobsList::addTimedJob(Command *cmd, pid_t pid, int duration, bool isForeground)
 {
-    //removeFinishedJobs();
+    // removeFinishedJobs();
     JobsList::TimedJob job(duration, cmd, pid, false, max_id + 1);
     addJob(job, isForeground);
 }
@@ -487,7 +487,7 @@ void JobsList::AlarmCheck()
             {
                 job_pair_it->second.printAlarm();
                 kill(job_pair_it->second.getProcessID(), SIGKILL);
-                //removeFinishedJobs();
+                // removeFinishedJobs();
             }
         }
     }
@@ -497,7 +497,7 @@ void JobsList::AlarmCheck()
         fgJob->printAlarm();
         kill(fgJob->getProcessID(), SIGKILL);
         stopForeground();
-        //removeFinishedJobs();
+        // removeFinishedJobs();
     }
 }
 
@@ -615,7 +615,7 @@ JobsCommand::JobsCommand(const char *cmd_line, JobsList *jobs)
 
 void JobsCommand::execute()
 {
-    //job_ptr->removeFinishedJobs();
+    // job_ptr->removeFinishedJobs();
     job_ptr->printJobsList();
 }
 
@@ -845,29 +845,6 @@ void RedirectFileCommand::execute()
             perror("smash error: open failed");
             exit(1);
         }
-        /**dup(fp); // now fp is in standard output
-        if (dup < 0)
-        {
-            perror("smash error: dup failed");
-            return;
-        }
-        if (close(fp) < 0)
-        {
-            perror("smash error: close failed");
-            return;
-        }**/
-        /**if (dynamic_cast<ExternalCommand *>(cmd) == nullptr) // Built in Command
-        {
-          cmd->execute();
-          //exit(0);
-          return;
-        }
-        char **argsArr = cmd->getArgsArr();
-        setpgrp();
-        if (execv(argsArr[0], argsArr) < 0)
-        {
-          perror("smash error: execv failed");
-        }**/
         setpgrp();
         smash.stopRunning();
         cmd->execute();
@@ -891,33 +868,6 @@ void RedirectFileCommand::execute()
 AppendFileCommand::AppendFileCommand(const char *cmd_line)
     : IOCommand(cmd_line)
 {
-    /**string cmd = "", target = "";
-    bool isTarget = false;
-    int size = args.size();
-    for (int i = 0; i < size; i++)
-    {
-        if (args[i].find(">>") != std::string::npos)
-        {
-            isTarget = true;
-            > is not the first char ==> there is a command before
-            cmd.append(args[i].substr(0, args[i].find_first_of(">>")));
-            //> is the first char ==> there is a stream after
-            target.append(args[i].substr(args[i].find_first_of(">>") + 1));
-            continue;
-        }
-        if (!isTarget) // still writing the command ______ >
-        {
-            cmd.append(args[i]);
-            cmd.append(" ");
-        }
-        else // we now take the target  >  _______
-        {
-            target.append(args[i]);
-            target.append(" ");
-        }
-    }
-    destination = target;
-    source = cmd;**/
     source = cmd_line_str.substr(0, cmd_line_str.find_first_of(">>"));
     destination = cmd_line_str.substr(cmd_line_str.find_first_of(">>") + 2);
     destination = _trim(string(destination));
@@ -951,19 +901,6 @@ void AppendFileCommand::execute()
                 exit(1);
             }
         }
-        /**if (dynamic_cast<ExternalCommand *>(cmd) == nullptr) // Built in Command
-        {
-          cmd->execute();
-          close(fp);
-          exit(0);
-        }
-        char **argsArr = cmd->getArgsArr();
-        // setpgrp();
-        if (execv(argsArr[0], argsArr) < 0)
-        {
-          perror("smash error: execv failed");
-        }
-        close(fp);**/
         setpgrp();
         smash.stopRunning();
         cmd->execute();
@@ -983,33 +920,6 @@ void AppendFileCommand::execute()
 PipeCommand::PipeCommand(const char *cmd_line)
     : IOCommand(cmd_line)
 {
-    /**string cmd = "", target = "";
-    bool isTarget = false;
-    int size = args.size();
-    for (int i = 0; i < size; i++)
-    {
-        if (args[i].find("|") != std::string::npos)
-        {
-            isTarget = true;
-            //> is not the first char ==> there is a command before
-            cmd.append(args[i].substr(0, args[i].find_first_of("|")));
-            //> is the first char ==> there is a stream after
-            target.append(args[i].substr(args[i].find_first_of("|") + 1));
-            continue;
-        }
-        if (!isTarget) // still writing the command ______ >
-        {
-            cmd.append(args[i]);
-            cmd.append(" ");
-        }
-        else // we now take the target  >  _______
-        {
-            target.append(args[i]);
-            target.append(" ");
-        }
-    }
-    destination = target;
-    source = cmd;**/
     source = cmd_line_str.substr(0, cmd_line_str.find_first_of("|"));
     destination = cmd_line_str.substr(cmd_line_str.find_first_of("|") + 1);
     destination = _trim(string(destination));
@@ -1018,11 +928,6 @@ PipeCommand::PipeCommand(const char *cmd_line)
 
 void PipeCommand::execute()
 {
-    if (destination.compare("") == 0)
-    { // illegal command
-        perror("smash error: > invalid arguments");
-        return;
-    }
     /**
      * my_pipe[0] = FD to read from pipe
      * my_pipe[1] = FD to write to pipe
@@ -1037,26 +942,18 @@ void PipeCommand::execute()
         return;
     }
     if (pid == 0)
-    { //son
+    { // son
         Command *cmd = smash.CreateCommand(source.c_str());
         close(my_pipe[0]); // son can't read from pipe
         // close(1);
-        dup2(my_pipe[1], 1); // now entry 1 in FDT is my_pipe[0]
-        /**if (dynamic_cast<ExternalCommand *>(cmd) == nullptr) // Built in Command
-        {
-          cmd->execute();
-          exit(0);
-        }
-        char **argsArr = cmd->getArgsArr();
-        setpgrp();
-        execv(argsArr[0], argsArr);**/
+        dup2(my_pipe[1], 1); // now entry 1 in FDT is my_pipe[1]
         setpgrp();
         close(my_pipe[1]);
         smash.stopRunning();
         cmd->execute();
     }
     else
-    { //parent
+    { // parent
         pid_t pid = fork();
         if (pid < 0)
         {
@@ -1095,33 +992,6 @@ void PipeCommand::execute()
 PipeErrorCommand::PipeErrorCommand(const char *cmd_line)
     : IOCommand(cmd_line)
 {
-    /**string cmd = "", target = "";
-    bool isTarget = false;
-    int size = args.size();
-    for (int i = 0; i < size; i++)
-    {
-        if (args[i].find("|&") != std::string::npos)
-        {
-            isTarget = true;
-            /> is not the first char ==> there is a command before
-            cmd.append(args[i].substr(0, args[i].find_first_of("|&")));
-            //> is the first char ==> there is a stream after
-            target.append(args[i].substr(args[i].find_first_of("|&") + 1));
-            continue;
-        }
-        if (!isTarget) // still writing the command ______ >
-        {
-            cmd.append(args[i]);
-            cmd.append(" ");
-        }
-        else // we now take the target  >  _______
-        {
-            target.append(args[i]);
-            target.append(" ");
-        }
-    }
-    destination = target;
-    source = cmd;**/
     source = cmd_line_str.substr(0, cmd_line_str.find_first_of("|&"));
     destination = cmd_line_str.substr(cmd_line_str.find_first_of("|&") + 2);
     destination = _trim(string(destination));
@@ -1130,11 +1000,6 @@ PipeErrorCommand::PipeErrorCommand(const char *cmd_line)
 
 void PipeErrorCommand::execute()
 {
-    if (destination.compare("") == 0)
-    { // illegal command
-        perror("smash error: > invalid arguments");
-        return;
-    }
     /**
      * my_pipe[0] = FD to read from pipe
      * my_pipe[1] = FD to write to pipe
@@ -1150,32 +1015,15 @@ void PipeErrorCommand::execute()
     if (pid == 0)
     {
         Command *cmd = smash.CreateCommand(source.c_str());
-        close(my_pipe[0]); // son can't read from pipe
-        close(1);
-        dup(my_pipe[1]); // now entry 1 in FDT is my_pipe[0]
-        /**if (dynamic_cast<ExternalCommand *>(cmd) == nullptr) // Built in Command
-        {
-          cmd->execute();
-          exit(0);
-        }
-        char **argsArr = cmd->getArgsArr();
+        close(my_pipe[0]);               // son can't read from pipe
+        dup2(my_pipe[1], STDERR_FILENO); // now entry 2 in FDT is my_pipe[1]
         setpgrp();
-        execv(argsArr[0], argsArr);**/
+        close(my_pipe[1]);
         smash.stopRunning();
         cmd->execute();
     }
     else
     {
-        close(my_pipe[1]); // parent can't write to pipe
-        int in_copy = dup(2);
-        close(2);
-        dup(my_pipe[0]); // now entry 0 in FDT is my_pipe[0]
-        int stat;
-        if (waitpid(pid, &stat, WUNTRACED) < 0)
-        {
-            perror("wait failed6");
-            return;
-        }
         pid_t pid = fork();
         if (pid < 0)
         {
@@ -1184,16 +1032,28 @@ void PipeErrorCommand::execute()
         }
         if (pid == 0) // child
         {
+            close(my_pipe[1]);
+            dup2(my_pipe[0], STDIN_FILENO); // now entry 0 in FDT is my_pipe[0]
+            close(my_pipe[0]);
+            setpgrp();
             Command *after = smash.CreateCommand(destination.c_str());
             smash.stopRunning();
             after->execute();
         }
         else
         { // parent closing things up
-            close(2);
-            dup(in_copy);
-            close(in_copy);
-            close(my_pipe[2]);
+            close(my_pipe[0]);
+            close(my_pipe[1]); // parent can't write to pipe
+            if (waitpid(-1, 0, WUNTRACED) < 0)
+            {
+                perror("smash error: wait failed4");
+                return;
+            }
+            if (waitpid(-1, 0, WUNTRACED) < 0)
+            {
+                perror("smash error: wait failed5");
+                return;
+            }
         }
     }
 }
@@ -1438,7 +1298,7 @@ bool isPipe(string cmd)
 bool isPipeError(string cmd)
 {
     if (cmd.find("|&") == std::string::npos)
-    { // no '|' found
+    { // no '|&' found
         return false;
     }
     return true;
@@ -1457,7 +1317,11 @@ Command *SmallShell::CreateCommand(const char *cmd_line)
 {
     string cmd_s = _trim(string(cmd_line));
     string firstWord = cmd_s.substr(0, cmd_s.find_first_of(" \n"));
-    if (isPipe(cmd_s))
+    if (isPipeError(cmd_s))
+    {
+        return new PipeErrorCommand(cmd_line);
+    }
+    else if (isPipe(cmd_s))
     {
         return new PipeCommand(cmd_line);
     }
