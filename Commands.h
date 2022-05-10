@@ -17,11 +17,13 @@
 #include <stack>
 #include <string>
 #include <map>
+#include <queue>
 
 using std::cout;
 using std::endl;
 using std::map;
 using std::pair;
+using std::priority_queue;
 using std::stack;
 using std::string;
 using std::vector;
@@ -159,16 +161,33 @@ private:
   };
   class TimedJob : public JobEntry
   {
+  private:
+    time_t time_of_death;
+
   public:
-    TimedJob(int duration, Command *cmd, int process_id, bool is_stopped, int job_id = 0) 
-    : JobEntry(cmd, process_id, is_stopped, job_id, duration) 
-    {}
+    TimedJob(int duration, Command *cmd, int process_id, bool is_stopped, int job_id = 0)
+        : JobEntry(cmd, process_id, is_stopped, job_id, duration)
+    {
+      time_of_death = duration + create_time;
+    }
+    TimedJob(const TimedJob& copy) = default;
+    time_t getDeathTime() const { return time_of_death; }
     virtual ~TimedJob() {}
     bool isOver() override;
+  };
+  //the compare struct for the priority queue
+  struct compareTimedJobs
+  {
+    bool operator()(TimedJob timed1, TimedJob timed2)
+    {
+      //closest timed job is prioritized (e.g timed2 in this case):
+      return timed1.getDeathTime() >= timed2.getDeathTime(); 
+    }
   };
   int max_id;
   map<int, JobEntry> jobs;
   stack<JobEntry> foregroundJob;
+  priority_queue<TimedJob, vector<TimedJob>, compareTimedJobs> pq_timed_jobs;
 
 public:
   JobsList();
@@ -196,7 +215,7 @@ public:
   pid_t lastToBack();
   pid_t jobIdToBack(int JobId);
   void AlarmCheck();
-  void addTimedJob(Command* cmd, pid_t pid, int duration, bool isForeground);
+  void addTimedJob(Command *cmd, pid_t pid, int duration, bool isForeground);
 };
 
 class JobsCommand : public BuiltInCommand
@@ -307,6 +326,7 @@ public:
 class TailCommand : public BuiltInCommand
 {
   int n;
+
 public:
   TailCommand(const char *cmd_line);
   virtual ~TailCommand() {}
@@ -361,14 +381,14 @@ public:
   void pop_dir();
   string top_dir();
   bool isEmpty_dir();
-  int getDirSize(); //returns the size of the directories stack
+  int getDirSize(); // returns the size of the directories stack
   void killForegroundJob();
   bool isForeground();
   pid_t getForegroundPid();
   void stopForeground();
   void runAtFront(pid_t pid);
   void runAtFront(pid_t pid, Command *cmd);
-  void addTimedJob(Command* cmd, pid_t pid, int duration, bool isForeground);
+  void addTimedJob(Command *cmd, pid_t pid, int duration, bool isForeground);
   void AlarmHandle();
   bool isRunning();
   void stopRunning();

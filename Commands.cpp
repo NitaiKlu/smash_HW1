@@ -335,7 +335,7 @@ bool JobsList::TimedJob::isOver()
     time_t stat;
     time(&stat);
     // int diff = std::difftime(stat, create_time);
-    return duration > 0 && create_time + duration <= stat;
+    return duration > 0 && time_of_death <= stat;
 }
 
 //**************JobList**********************
@@ -398,9 +398,17 @@ void JobsList::addJobFromZsignal(JobEntry &job)
 // this is to add a job by timeout command
 void JobsList::addTimedJob(Command *cmd, pid_t pid, int duration, bool isForeground)
 {
-    // removeFinishedJobs();
-    JobsList::TimedJob job(duration, cmd, pid, false, max_id + 1);
-    addJob(job, isForeground);
+    if (isForeground)
+    {
+        JobsList::TimedJob job(duration, cmd, pid, false);
+        addJob(job, isForeground);
+    }
+    else
+    {
+        JobsList::TimedJob job(duration, cmd, pid, false, ++max_id);
+        pq_timed_jobs.push(job);
+        jobs.insert(pair<int, JobEntry>(job.getJobId(), job));
+    }
 }
 
 void JobsList::killAllJobs()
@@ -414,8 +422,8 @@ void JobsList::killAllJobs()
 
 void JobsList::removeFinishedJobs()
 {
-    if (jobs.empty() == 1)
-        return;
+    /**if (jobs.empty() == 1 && pq_timed_jobs.empty() == 1)
+        return; ???? **/
     pid_t pid;
     for (auto job_pair_it = jobs.begin(), next_it = job_pair_it; job_pair_it != jobs.end(); job_pair_it = next_it)
     {
@@ -429,7 +437,7 @@ void JobsList::removeFinishedJobs()
         }
         else
         {
-            if (WIFEXITED(stat)) // child terminated normally
+            if (WIFEXITED(stat) && !job_pair_it->second.isTimed()) // child terminated normally
             {
                 removeJobById(job_pair_it->first);
             }
@@ -475,20 +483,16 @@ JobsList::JobEntry *JobsList::getJobById(int jobId)
 
 void JobsList::AlarmCheck()
 {
-    if (jobs.empty() && foregroundJob.empty())
+    if (pq_timed_jobs.empty() && foregroundJob.empty())
         return;
-    for (auto job_pair_it = jobs.begin(), next_it = job_pair_it; job_pair_it != jobs.end(); job_pair_it = next_it)
+    if (!pq_timed_jobs.empty())
     {
-        ++next_it;
-        JobEntry *job = &(job_pair_it->second);
-        if (job->isTimed()) // if this is a timed job
+        TimedJob first(pq_timed_jobs.top());
+        if (first.isOver())
         {
-            if (job->isOver())
-            {
-                job_pair_it->second.printAlarm();
-                kill(job_pair_it->second.getProcessID(), SIGKILL);
-                // removeFinishedJobs();
-            }
+            first.printAlarm();
+            kill(first.getProcessID(), SIGKILL);
+            pq_timed_jobs.pop();
         }
     }
     JobEntry *fgJob = &(foregroundJob.top());
@@ -496,8 +500,7 @@ void JobsList::AlarmCheck()
     {
         fgJob->printAlarm();
         kill(fgJob->getProcessID(), SIGKILL);
-        stopForeground();
-        // removeFinishedJobs();
+        foregroundJob.pop();
     }
 }
 
@@ -1094,17 +1097,15 @@ void TimeOutCommand::execute()
     }
     else if (pid == 0) // child
     {
+        SmallShell &smash = SmallShell::getInstance();
         smash.stopRunning();
-        if (dynamic_cast<ExternalCommand *>(command) == nullptr) // Built in Command
-        {
-            command->execute();
-            return;
-        }
-        char **argsArr = command->getArgsArr(); // External command
-        execv(argsArr[0], argsArr);
+        char **argsArr = command->getArgsArr();
+        execv(argsArr[0], argsArr); //supports only external commands
+        perror("execv failed");
     }
     else // parent
     {
+        //setting up the needed alarm:
         if (alarm(this->duration) < 0)
         {
             perror("smash error: alarm failed");
