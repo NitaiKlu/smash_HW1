@@ -181,7 +181,7 @@ private:
     bool operator()(TimedJob timed1, TimedJob timed2)
     {
       //closest timed job is prioritized (e.g timed2 in this case):
-      return timed1.getDeathTime() >= timed2.getDeathTime(); 
+      return timed1.getDeathTime() > timed2.getDeathTime(); 
     }
   };
   int max_id;
@@ -216,6 +216,8 @@ public:
   pid_t jobIdToBack(int JobId);
   void AlarmCheck();
   void addTimedJob(Command *cmd, pid_t pid, int duration, bool isForeground);
+  bool anyTimedJobs();
+  time_t closestAlarm();
 };
 
 class JobsCommand : public BuiltInCommand
@@ -392,6 +394,8 @@ public:
   void AlarmHandle();
   bool isRunning();
   void stopRunning();
+  bool isEmpty_pq();
+  time_t closestAlarmFromNow(); //guess what this returns... yep- the closest Alarm signal From Now.
 };
 
 #endif // SMASH_COMMAND_H_

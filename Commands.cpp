@@ -493,6 +493,7 @@ void JobsList::AlarmCheck()
             first.printAlarm();
             kill(first.getProcessID(), SIGKILL);
             pq_timed_jobs.pop();
+            alarm(pq_timed_jobs.top().getDeathTime());
         }
     }
     JobEntry *fgJob = &(foregroundJob.top());
@@ -608,6 +609,16 @@ pid_t JobsList::jobIdToBack(int JobId)
     it->second.printJob();
     it->second.contJob();
     return it->second.getProcessID();
+}
+
+bool JobsList::anyTimedJobs()
+{
+    return pq_timed_jobs.empty();
+}
+
+time_t JobsList::closestAlarm()
+{
+    return pq_timed_jobs.top().getDeathTime();
 }
 
 //**************JobsCommand**********************
@@ -1100,16 +1111,33 @@ void TimeOutCommand::execute()
         SmallShell &smash = SmallShell::getInstance();
         smash.stopRunning();
         char **argsArr = command->getArgsArr();
-        execv(argsArr[0], argsArr); //supports only external commands
+        execv(argsArr[0], argsArr); // supports only external commands
         perror("execv failed");
     }
     else // parent
     {
-        //setting up the needed alarm:
-        if (alarm(this->duration) < 0)
+        // setting up the needed alarm:
+        if (smash.isEmpty_pq()) // no alarms set
         {
-            perror("smash error: alarm failed");
-            return;
+            if (alarm(this->duration) < 0)
+            {
+                perror("smash error: alarm failed");
+                return;
+            }
+        }
+        else
+        {
+            // there's an alarm already, now we check which is sooner:
+            time_t timer;
+            time(&timer);
+            if (timer + duration < smash.closestAlarmFromNow()) // if the new alarm is sooner
+            {
+                if (alarm(this->duration) < 0)
+                {
+                    perror("smash error: alarm failed");
+                    return;
+                }
+            }
         }
         if (_isBackgroundComamnd(cmd.c_str()))
         {
@@ -1599,4 +1627,14 @@ bool SmallShell::isRunning()
 void SmallShell::stopRunning()
 {
     is_running = false;
+}
+
+bool SmallShell::isEmpty_pq()
+{
+    return jobs.anyTimedJobs();
+}
+
+time_t SmallShell::closestAlarmFromNow()
+{
+    return jobs.closestAlarm();
 }
