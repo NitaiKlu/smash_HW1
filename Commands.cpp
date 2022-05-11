@@ -401,6 +401,7 @@ void JobsList::addTimedJob(Command *cmd, pid_t pid, int duration, bool isForegro
     if (isForeground)
     {
         JobsList::TimedJob job(duration, cmd, pid, false);
+        pq_timed_jobs.push(job);
         addJob(job, isForeground);
     }
     else
@@ -413,6 +414,7 @@ void JobsList::addTimedJob(Command *cmd, pid_t pid, int duration, bool isForegro
 
 void JobsList::killAllJobs()
 {
+    removeFinishedJobs();
     std::cout << "smash: sending SIGKILL signal to " << getCount() << " jobs:" << std::endl;
     for (auto job_pair : jobs)
     {
@@ -433,11 +435,11 @@ void JobsList::removeFinishedJobs()
         pid_t res = waitpid(pid, &stat, WNOHANG);
         if (res < 0)
         {
-            perror("wait failed1");
+            return;
         }
         else
         {
-            if (WIFEXITED(stat) && !job_pair_it->second.isTimed()) // child terminated normally
+            if (WIFEXITED(stat) /*&& !job_pair_it->second.isTimed()*/) // child terminated normally
             {
                 removeJobById(job_pair_it->first);
             }
@@ -483,26 +485,36 @@ JobsList::JobEntry *JobsList::getJobById(int jobId)
 
 void JobsList::AlarmCheck()
 {
-    if (pq_timed_jobs.empty() && foregroundJob.empty())
+    if (pq_timed_jobs.empty())
         return;
+    pid_t pid = 0;
+    TimedJob first(pq_timed_jobs.top());
+    pid = first.getProcessID();
+    int stat = waitpid(pid, nullptr, WNOHANG);
+    if (stat == 0 && getpid() != pid) // still running
+    {
+        first.printAlarm();
+        kill(first.getProcessID(), SIGKILL);
+    }
+    pq_timed_jobs.pop();
     if (!pq_timed_jobs.empty())
     {
-        TimedJob first(pq_timed_jobs.top());
-        if (first.isOver())
-        {
-            first.printAlarm();
-            kill(first.getProcessID(), SIGKILL);
-            pq_timed_jobs.pop();
-            alarm(pq_timed_jobs.top().getDeathTime());
-        }
+        // cout << "im here printing process " << pq_timed_jobs.top().getDeathTime() << endl;
+        alarm(pq_timed_jobs.top().getDeathTime() - time(NULL));
     }
+
     JobEntry *fgJob = &(foregroundJob.top());
-    if (!foregroundJob.empty() && fgJob->isTimed() && fgJob->isOver()) // if this is a timed job
+    if (!foregroundJob.empty() && fgJob->getProcessID() == pid)
+    {
+        foregroundJob.pop();
+    }
+
+    /**if (!foregroundJob.empty() && fgJob->isTimed() && fgJob->isOver()) // if this is a timed job
     {
         fgJob->printAlarm();
         kill(fgJob->getProcessID(), SIGKILL);
         foregroundJob.pop();
-    }
+    }**/
 }
 
 int JobsList::getPID(int jobId)
@@ -1108,10 +1120,17 @@ void TimeOutCommand::execute()
     }
     else if (pid == 0) // child
     {
-        SmallShell &smash = SmallShell::getInstance();
         smash.stopRunning();
+        setpgrp();
+        char temp[COMMAND_ARGS_MAX_LENGTH];
+        strcpy(temp, command->getCmdStr().c_str());
+        if (_isBackgroundComamnd(command->getCmdStr().c_str()))
+        {
+            _removeBackgroundSign(temp);
+        }
         char **argsArr = command->getArgsArr();
-        execv(argsArr[0], argsArr); // supports only external commands
+        argsArr[2] = temp;
+        execv(argsArr[0], argsArr);
         perror("execv failed");
     }
     else // parent
@@ -1119,7 +1138,7 @@ void TimeOutCommand::execute()
         // setting up the needed alarm:
         if (smash.isEmpty_pq()) // no alarms set
         {
-            if (alarm(this->duration) < 0)
+            if (alarm(duration) < 0)
             {
                 perror("smash error: alarm failed");
                 return;
@@ -1132,7 +1151,7 @@ void TimeOutCommand::execute()
             time(&timer);
             if (timer + duration < smash.closestAlarmFromNow()) // if the new alarm is sooner
             {
-                if (alarm(this->duration) < 0)
+                if (alarm(duration) < 0)
                 {
                     perror("smash error: alarm failed");
                     return;
@@ -1466,7 +1485,6 @@ void SmallShell::executeCommand(const char *cmd_line)
 
 void SmallShell::executeExternalCommand(Command *cmd)
 {
-    char **argsArr = cmd->getArgsArr();
     /**string str = cmd->getCmdStr();
     if (str.back() == '&')
     {
@@ -1489,6 +1507,14 @@ void SmallShell::executeExternalCommand(Command *cmd)
     {
         stopRunning();
         setpgrp();
+        char temp[COMMAND_ARGS_MAX_LENGTH];
+        strcpy(temp, cmd->getCmdStr().c_str());
+        if (_isBackgroundComamnd(cmd->getCmdStr().c_str()))
+        {
+            _removeBackgroundSign(temp);
+        }
+        char **argsArr = cmd->getArgsArr();
+        argsArr[2] = temp;
         execv(argsArr[0], argsArr);
         perror("execv failed");
     }
@@ -1564,7 +1590,8 @@ void SmallShell::stopForeground()
 void SmallShell::runAtFront(pid_t pid, Command *cmd)
 {
     int stat;
-    if (waitpid(pid, &stat, WUNTRACED) < 0)
+    int res = waitpid(pid, &stat, WUNTRACED);
+    if (res < 0)
     {
         perror("wait failed7");
         return;
@@ -1583,6 +1610,10 @@ void SmallShell::runAtFront(pid_t pid, Command *cmd)
                 jobs.addJob(cmd, pid, false, true);
             }
         }
+        /**else if (res != 0) // child terminated normally
+        {
+            jobs.killForegroundJob();
+        }**/
     }
 }
 
